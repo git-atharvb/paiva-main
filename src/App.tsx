@@ -6,7 +6,6 @@ import { useTheme } from './context/ThemeContext'
 import LoginForm from './components/auth/LoginForm'
 import SignupForm from './components/auth/SignupForm'
 import { Toaster } from 'react-hot-toast'
-import './App.css'
 import { cn } from './lib/utils';
 
 function App() {
@@ -104,7 +103,7 @@ function App() {
               <img
                 src={paivaLogo}
                 alt="Paiva Logo"
-                className="w-full h-full object-contain rounded-3xl drop-shadow-2xl relative z-10 transition-all duration-700 ease-spring group-hover:scale-110 group-hover:drop-shadow-[0_20px_40px_oklch(0.58_0.255_283_/_0.4)] outline-none border-none ring-0 animate-float"
+                className="w-full h-full object-contain rounded-3xl drop-shadow-2xl relative z-10 transition-all duration-700 ease-spring group-hover:scale-110 group-hover:drop-shadow-[0_20px_40px_oklch(0.58_0.255_283/0.4)] outline-none border-none ring-0 animate-float"
               />
             </div>
           </div>

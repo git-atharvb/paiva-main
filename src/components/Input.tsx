@@ -34,13 +34,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               'transition-all duration-250 ease-smooth',
               // ── Focus state — themed ring ─────────────────────────────
               'focus:border-primary focus:bg-input/20 dark:focus:bg-input/40',
-              'focus:shadow-[0_0_0_3px_oklch(from_var(--color-ring)_l_c_h_/_0.18)]',
+              'focus:shadow-[0_0_0_3px_oklch(from_var(--color-ring)_l_c_h/0.18)]',
               // ── Placeholder (hidden — label acts as placeholder) ──────
               'placeholder-transparent',
               // ── Password right padding ────────────────────────────────
               isPassword && 'pr-12',
               // ── Error state ───────────────────────────────────────────
-              error && 'border-destructive focus:border-destructive focus:shadow-[0_0_0_3px_oklch(from_var(--color-destructive)_l_c_h_/_0.18)]',
+              error && 'border-destructive focus:border-destructive focus:shadow-[0_0_0_3px_oklch(from_var(--color-destructive)_l_c_h/0.18)]',
               className
             )}
             placeholder={label}
