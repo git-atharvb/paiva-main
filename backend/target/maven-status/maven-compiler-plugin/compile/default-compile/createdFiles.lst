@@ -1,0 +1,9 @@
+com\paiva\security\WebSecurityConfig.class
+com\paiva\security\jwt\JwtUtils.class
+com\paiva\security\jwt\AuthEntryPointJwt.class
+com\paiva\security\service\UserDetailsServiceImpl.class
+com\paiva\PaivaApplication.class
+com\paiva\repository\UserRepository.class
+com\paiva\security\jwt\AuthTokenFilter.class
+com\paiva\security\service\UserDetailsImpl.class
+com\paiva\model\User.class

@@ -1,0 +1,14 @@
+A:\WebDev\paiva-main\backend\src\main\java\com\paiva\payload\response\MessageResponse.java
+A:\WebDev\paiva-main\backend\src\main\java\com\paiva\security\service\UserDetailsImpl.java
+A:\WebDev\paiva-main\backend\src\main\java\com\paiva\repository\UserRepository.java
+A:\WebDev\paiva-main\backend\src\main\java\com\paiva\security\jwt\JwtUtils.java
+A:\WebDev\paiva-main\backend\src\main\java\com\paiva\payload\request\LoginRequest.java
+A:\WebDev\paiva-main\backend\src\main\java\com\paiva\security\jwt\AuthEntryPointJwt.java
+A:\WebDev\paiva-main\backend\src\main\java\com\paiva\security\WebSecurityConfig.java
+A:\WebDev\paiva-main\backend\src\main\java\com\paiva\security\service\UserDetailsServiceImpl.java
+A:\WebDev\paiva-main\backend\src\main\java\com\paiva\model\User.java
+A:\WebDev\paiva-main\backend\src\main\java\com\paiva\payload\request\SignupRequest.java
+A:\WebDev\paiva-main\backend\src\main\java\com\paiva\payload\response\JwtResponse.java
+A:\WebDev\paiva-main\backend\src\main\java\com\paiva\security\jwt\AuthTokenFilter.java
+A:\WebDev\paiva-main\backend\src\main\java\com\paiva\controllers\AuthController.java
+A:\WebDev\paiva-main\backend\src\main\java\com\paiva\PaivaApplication.java
