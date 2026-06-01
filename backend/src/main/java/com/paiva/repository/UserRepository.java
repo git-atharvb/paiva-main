@@ -1,10 +1,10 @@
 package com.paiva.repository;
 
-import com.paiva.model.User;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.stereotype.Repository;
-
 import java.util.Optional;
+
+import org.springframework.data.mongodb.repository.MongoRepository;
+
+import com.paiva.model.User;
 
 public interface UserRepository extends MongoRepository<User, String> {
     
