@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import toast from 'react-hot-toast';
 import Input from '../Input';
+import { Button } from '../ui/Button';
 import { login } from '../../services/auth';
 import { useNavigate } from 'react-router-dom';
 
@@ -36,7 +37,7 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
       const response = await login(data);
       const userPayload = { ...response, accessToken: response.token };
       localStorage.setItem('user', JSON.stringify(userPayload));
-      toast.success(`Welcome back, ${response.name}!`);
+      toast.success(`Welcome to Paiva, ${response.name || 'User'}!`);
       navigate('/dashboard');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to sign in.';
@@ -47,7 +48,7 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
   };
 
   return (
-    <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
+    <form className="grid gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500" onSubmit={handleSubmit(onSubmit)}>
       <Input
         label="Email address"
         type="email"
@@ -64,19 +65,19 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
         {...register('password')}
       />
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', marginTop: '-0.5rem' }}>
-        <button type="button" className="link" style={{ fontSize: '0.85rem' }} onClick={() => toast.error('Forgot password flow is under construction.')}>
+      <div className="flex justify-end -mt-4 mb-2">
+        <Button variant="ghost" size="sm" type="button" onClick={() => toast.error('Forgot password flow is under construction.')}>
           Forgot password?
-        </button>
+        </Button>
       </div>
 
-      <div className="form-actions">
-        <button className="submit-button" type="submit" disabled={isBusy}>
-          {isBusy ? 'Processing…' : 'Sign in'}
-        </button>
-        <button type="button" className="link" onClick={onToggleMode}>
+      <div className="flex flex-col gap-4 mt-2">
+        <Button variant="primary" size="lg" type="submit" isLoading={isBusy} className="w-full">
+          Sign in
+        </Button>
+        <Button variant="ghost" size="md" type="button" onClick={onToggleMode} className="w-full">
           Create account
-        </button>
+        </Button>
       </div>
     </form>
   );

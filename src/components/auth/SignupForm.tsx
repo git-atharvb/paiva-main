@@ -5,6 +5,7 @@ import * as z from 'zod';
 import toast from 'react-hot-toast';
 import Input from '../Input';
 import PasswordStrengthMeter from '../PasswordStrengthMeter';
+import { Button } from '../ui/Button';
 import { signup } from '../../services/auth';
 
 const signupSchema = z.object({
@@ -59,7 +60,7 @@ export default function SignupForm({ onToggleMode, onSuccess }: SignupFormProps)
   };
 
   return (
-    <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
+    <form className="grid gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500" onSubmit={handleSubmit(onSubmit)}>
       <Input
         label="Full Name"
         type="text"
@@ -96,13 +97,13 @@ export default function SignupForm({ onToggleMode, onSuccess }: SignupFormProps)
         {...register('confirmPassword')}
       />
 
-      <div className="form-actions">
-        <button className="submit-button" type="submit" disabled={isBusy}>
-          {isBusy ? 'Processing…' : 'Sign up'}
-        </button>
-        <button type="button" className="link" onClick={onToggleMode}>
+      <div className="flex flex-col gap-4 mt-4">
+        <Button variant="primary" size="lg" type="submit" isLoading={isBusy} className="w-full">
+          Sign up
+        </Button>
+        <Button variant="ghost" size="md" type="button" onClick={onToggleMode} className="w-full">
           Sign in instead
-        </button>
+        </Button>
       </div>
     </form>
   );

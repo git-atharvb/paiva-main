@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import './App.css'
 import Header from './components/Header'
 import Sidebar from './components/Sidebar'
 import ChatArea from './components/ChatArea'
+import { DashboardLayout } from './components/layout/DashboardLayout'
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -26,16 +28,16 @@ export default function Dashboard() {
 
   function handleLogout() {
     localStorage.removeItem('user')
+    toast.success('Thank you for using Paiva!')
     navigate('/')
   }
 
   return (
-    <div className="paiva-dashboard">
-      <Header userName={user?.name} onLogout={handleLogout} />
-      <div className="dashboard-body">
-        <Sidebar />
-        <ChatArea />
-      </div>
-    </div>
+    <DashboardLayout
+      header={<Header userName={user?.name} onLogout={handleLogout} />}
+      sidebar={<Sidebar />}
+    >
+      <ChatArea />
+    </DashboardLayout>
   )
 }

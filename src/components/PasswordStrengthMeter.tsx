@@ -46,19 +46,22 @@ const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({ password 
   const changePasswordColor = () => ({
     width: password.length === 0 ? '0%' : `${(score + 1) * 20}%`,
     background: funcProgressColor(),
-    height: '4px',
-    borderRadius: '2px',
-    transition: 'all 0.3s ease-in-out'
   });
 
   return (
-    <div className="password-strength-container" style={{ marginTop: '0.5rem', marginBottom: '1rem' }}>
-      <div className="progress-bg" style={{ background: 'rgba(255, 255, 255, 0.1)', height: '4px', borderRadius: '2px', width: '100%' }}>
-        <div className="progress-bar" style={changePasswordColor()} />
+    <div className="mt-2 mb-4 w-full">
+      <div className="w-full h-1.5 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
+        <div 
+          className="h-full rounded-full transition-all duration-500 ease-out" 
+          style={changePasswordColor()} 
+        />
       </div>
       {password && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
-          <span style={{ fontSize: '0.75rem', color: funcProgressColor(), fontWeight: 600 }}>
+        <div className="flex justify-end mt-1.5">
+          <span 
+            className="text-xs font-semibold"
+            style={{ color: funcProgressColor() }}
+          >
             {createPassLabel()}
           </span>
         </div>
