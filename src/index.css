@@ -4,78 +4,60 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme {
-  --color-background: hsl(210, 40%, 98%);
-  --color-foreground: hsl(222.2, 84%, 4.9%);
+  /* OKLCH-based Premium Palette */
+  --color-background: oklch(0.985 0.005 250);
+  --color-foreground: oklch(0.145 0.015 250);
   
-  --color-primary: hsl(262.1, 83.3%, 57.8%);
-  --color-primary-foreground: hsl(210, 40%, 98%);
+  --color-primary: oklch(0.6 0.25 285);
+  --color-primary-foreground: oklch(0.985 0 0);
   
-  --color-secondary: hsl(210, 40%, 96.1%);
-  --color-secondary-foreground: hsl(222.2, 47.4%, 11.2%);
+  --color-secondary: oklch(0.96 0.01 250);
+  --color-secondary-foreground: oklch(0.2 0.02 250);
   
-  --color-muted: hsl(210, 40%, 96.1%);
-  --color-muted-foreground: hsl(215.4, 16.3%, 46.9%);
-  
-  --color-accent: hsl(210, 40%, 96.1%);
-  --color-accent-foreground: hsl(222.2, 47.4%, 11.2%);
-  
-  --color-destructive: hsl(0, 84.2%, 60.2%);
-  --color-destructive-foreground: hsl(210, 40%, 98%);
-  
-  --color-border: hsl(214.3, 31.8%, 91.4%);
-  --color-input: hsl(214.3, 31.8%, 91.4%);
-  --color-ring: hsl(262.1, 83.3%, 57.8%);
+  --color-border: oklch(0.92 0.01 250);
+  --color-input: oklch(0.92 0.01 250);
+  --color-ring: oklch(0.6 0.25 285);
   
   --radius-lg: 1rem;
   --radius-xl: 1.5rem;
   --radius-2xl: 2rem;
 
-  --shadow-premium: 0 32px 80px -20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
-  --shadow-premium-dark: 0 40px 100px -20px rgba(0, 0, 0, 0.8), 0 0 40px rgba(139, 92, 246, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.1);
-  --shadow-neon: 0 0 20px rgba(124, 58, 237, 0.4), 0 0 40px rgba(124, 58, 237, 0.2);
+  --shadow-premium: 0 40px 80px -20px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  --shadow-premium-dark: 0 50px 100px -20px rgba(0, 0, 0, 0.8), 0 0 50px rgba(124, 58, 237, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  --shadow-neon: 0 0 30px oklch(0.6 0.25 285 / 0.4), 0 0 60px oklch(0.6 0.25 285 / 0.2);
 
-  --animate-gradient-x: gradient-x 15s ease infinite;
-  --animate-float: float 6s ease-in-out infinite;
+  --animate-gradient-x: gradient-x 20s ease infinite;
+  --animate-spotlight: spotlight 4s ease-in-out infinite alternate;
+  --animate-border-spin: border-spin 4s linear infinite;
 
   @keyframes gradient-x {
-    0%, 100% {
-      background-size: 200% 200%;
-      background-position: left center;
-    }
-    50% {
-      background-size: 200% 200%;
-      background-position: right center;
-    }
+    0%, 100% { background-size: 200% 200%; background-position: left center; }
+    50% { background-size: 200% 200%; background-position: right center; }
   }
 
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+  @keyframes spotlight {
+    0% { transform: translate(-20%, -20%) scale(1); opacity: 0.5; }
+    100% { transform: translate(20%, 20%) scale(1.2); opacity: 0.8; }
+  }
+  
+  @keyframes border-spin {
+    100% { transform: rotate(360deg); }
   }
 }
 
 [data-theme='dark'] {
-  --color-background: hsl(222.2, 84%, 4.9%);
-  --color-foreground: hsl(210, 40%, 98%);
+  --color-background: oklch(0.15 0.02 255);
+  --color-foreground: oklch(0.985 0.005 250);
   
-  --color-primary: hsl(262.1, 83.3%, 57.8%);
-  --color-primary-foreground: hsl(210, 40%, 98%);
+  --color-primary: oklch(0.65 0.25 285);
+  --color-primary-foreground: oklch(0.985 0 0);
   
-  --color-secondary: hsl(217.2, 32.6%, 17.5%);
-  --color-secondary-foreground: hsl(210, 40%, 98%);
+  --color-secondary: oklch(0.2 0.03 260);
+  --color-secondary-foreground: oklch(0.985 0.005 250);
   
-  --color-muted: hsl(217.2, 32.6%, 17.5%);
-  --color-muted-foreground: hsl(215, 20.2%, 65.1%);
-  
-  --color-accent: hsl(217.2, 32.6%, 17.5%);
-  --color-accent-foreground: hsl(210, 40%, 98%);
-  
-  --color-destructive: hsl(0, 62.8%, 30.6%);
-  --color-destructive-foreground: hsl(210, 40%, 98%);
-  
-  --color-border: hsl(217.2, 32.6%, 17.5%);
-  --color-input: hsl(217.2, 32.6%, 17.5%);
-  --color-ring: hsl(262.1, 83.3%, 57.8%);
+  --color-border: oklch(0.22 0.03 260);
+  --color-input: oklch(0.22 0.03 260);
+  --color-ring: oklch(0.65 0.25 285);
 }
 
 @layer base {
@@ -85,35 +67,29 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    transition: background-color 0.7s ease, color 0.7s ease;
   }
 }
 
-/* Premium Mesh Animation */
-.bg-mesh {
-  background-image: 
-    radial-gradient(circle at 15% 50%, rgba(124, 58, 237, 0.12), transparent 35%),
-    radial-gradient(circle at 85% 30%, rgba(37, 99, 235, 0.12), transparent 35%);
-  background-attachment: fixed;
-  animation: gradient-x 15s ease infinite;
-  background-size: 150% 150%;
+/* Premium Glass Noise Texture */
+.bg-noise {
+  position: relative;
+}
+.bg-noise::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: overlay;
+}
+[data-theme='dark'] .bg-noise::before {
+  opacity: 0.06;
+  mix-blend-mode: color-dodge;
 }
 
-[data-theme='dark'] .bg-mesh {
-  background-image: 
-    radial-gradient(circle at 15% 50%, rgba(124, 58, 237, 0.25), transparent 40%),
-    radial-gradient(circle at 85% 30%, rgba(37, 99, 235, 0.25), transparent 40%),
-    radial-gradient(circle at 50% 80%, rgba(236, 72, 153, 0.15), transparent 45%);
-}
+/* Base utilities */
 
-/* Custom background animation for the entire app */
-.bg-mesh {
-  background-image: 
-    radial-gradient(circle at 15% 50%, rgba(124, 58, 237, 0.08), transparent 25%),
-    radial-gradient(circle at 85% 30%, rgba(37, 99, 235, 0.08), transparent 25%);
-}
-
-[data-theme='dark'] .bg-mesh {
-  background-image: 
-    radial-gradient(circle at 15% 50%, rgba(124, 58, 237, 0.15), transparent 25%),
-    radial-gradient(circle at 85% 30%, rgba(37, 99, 235, 0.15), transparent 25%);
-}
+/* Cleaned up redundant mesh classes */

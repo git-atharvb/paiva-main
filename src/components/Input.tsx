@@ -1,4 +1,4 @@
-import { forwardRef, useState } from 'react';
+import { forwardRef, useState, useId } from 'react';
 import type { InputHTMLAttributes } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -12,27 +12,32 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, type = 'text', className, ...props }, ref) => {
     const [showPassword, setShowPassword] = useState(false);
     const isPassword = type === 'password';
+    const id = useId();
 
     return (
       <div className="relative mb-6 text-left w-full group">
         <div className="relative w-full">
           <input
+            id={id}
             ref={ref}
             type={isPassword && showPassword ? 'text' : type}
             className={cn(
-              'peer w-full h-14 px-4 pt-4 pb-2 rounded-xl bg-black/5 dark:bg-white/5 border-2 transition-all outline-none text-foreground placeholder-transparent focus:ring-4 focus:ring-primary/20',
-              error ? 'border-destructive focus:border-destructive' : 'border-transparent focus:border-primary',
+              "peer w-full h-14 px-4 bg-transparent border-b-2 border-border/50 text-foreground text-base outline-none transition-all duration-300",
+              "focus:border-primary placeholder-transparent",
+              error && "border-destructive focus:border-destructive",
               className
             )}
             placeholder={label}
             {...props}
           />
-          <label 
+          <label
+            htmlFor={id}
             className={cn(
-              'absolute left-4 top-4 text-muted-foreground transition-all pointer-events-none text-base',
-              'peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-muted-foreground',
-              'peer-focus:top-1.5 peer-focus:text-xs peer-focus:text-primary',
-              'peer-[&:not(:placeholder-shown)]:top-1.5 peer-[&:not(:placeholder-shown)]:text-xs'
+              "absolute left-4 top-4 text-muted-foreground transition-transform duration-200 ease-out pointer-events-none origin-[0]",
+              "peer-focus:-translate-y-6 peer-focus:scale-75 peer-focus:text-primary peer-focus:font-semibold",
+              "peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100",
+              "peer-[:not(:placeholder-shown)]:-translate-y-6 peer-[:not(:placeholder-shown)]:scale-75",
+              error && "text-destructive peer-focus:text-destructive"
             )}
           >
             {label}

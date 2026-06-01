@@ -7,7 +7,7 @@ export default function Header({ userName, onLogout }: { userName?: string; onLo
 
   return (
     <>
-      <div className="font-black text-xl tracking-widest bg-gradient-to-br from-primary to-blue-500 bg-clip-text text-transparent select-none">
+      <div className="font-black text-xl tracking-widest bg-linear-to-br from-primary to-blue-500 bg-clip-text text-transparent select-none">
         PAIVA
       </div>
       <nav className="flex items-center gap-4 md:gap-6">
@@ -17,7 +17,7 @@ export default function Header({ userName, onLogout }: { userName?: string; onLo
           onClick={toggleTheme} 
           title="Toggle Theme"
           aria-label="Toggle theme"
-          className="rounded-full w-10 h-10 p-0 flex items-center justify-center"
+          className="rounded-full size-10 p-0 flex items-center justify-center"
         >
           {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
         </Button>

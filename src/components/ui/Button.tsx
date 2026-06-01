@@ -3,23 +3,24 @@ import { cn } from '../../lib/utils';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'icon';
   isLoading?: boolean;
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', isLoading, children, disabled, ...props }, ref) => {
     const variants = {
-      primary: 'bg-primary text-primary-foreground hover:brightness-110 shadow-sm transition-all hover:scale-[1.02]',
-      secondary: 'bg-secondary/40 text-secondary-foreground border border-border/50 hover:bg-secondary/60 hover:border-primary/50 shadow-sm transition-all hover:scale-[1.02]',
-      ghost: 'bg-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/30 transition-all hover:scale-[1.02]',
-      danger: 'bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm transition-all hover:scale-[1.02]'
+      primary: 'bg-primary text-primary-foreground hover:brightness-110 shadow-neon transition-all duration-300 hover:scale-[1.03]',
+      secondary: 'bg-secondary/40 text-secondary-foreground border border-border/50 hover:bg-secondary/60 hover:border-primary/50 shadow-sm transition-all duration-300 hover:scale-[1.03]',
+      ghost: 'bg-transparent text-muted-foreground hover:text-foreground hover:bg-secondary/30 transition-all duration-300 hover:scale-[1.03]',
+      danger: 'bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm transition-all duration-300 hover:scale-[1.03]'
     };
 
     const sizes = {
       sm: 'h-9 px-4 text-xs',
       md: 'h-11 px-6 text-sm',
-      lg: 'h-14 px-8 text-base'
+      lg: 'h-14 px-8 text-base',
+      icon: 'size-12 p-0 flex items-center justify-center'
     };
 
     return (

@@ -26,10 +26,11 @@ function App() {
   }
 
   return (
-    <div className="w-full min-h-screen flex items-center justify-center p-6 bg-mesh relative overflow-hidden transition-colors duration-1000">
-      {/* Dynamic atmospheric lighting */}
-      <div className="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] rounded-full bg-primary/20 blur-[140px] pointer-events-none mix-blend-screen animate-float" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-blue-500/20 blur-[140px] pointer-events-none mix-blend-screen animate-float" style={{ animationDelay: '3s' }} />
+    <div className="w-full min-h-dvh flex items-center justify-center p-6 relative overflow-hidden transition-colors duration-700 bg-background">
+      {/* High-Performance Bright Mesh Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-blue-400/40 via-transparent to-transparent dark:from-blue-900/40 opacity-80" />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-fuchsia-400/40 via-transparent to-transparent dark:from-purple-900/40 opacity-80" />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+CjxwYXRoIGQ9Ik0wIDBoNDB2NDBIMHoiIGZpbGw9Im5vbmUiLz4KPHBhdGggZD0iTTAgMGg0MHYxSDB6bTAgNDBoMXYtNDBoLTEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz4KPC9zdmc+')] mix-blend-overlay" />
       <Toaster 
         position="top-right" 
         toastOptions={{
