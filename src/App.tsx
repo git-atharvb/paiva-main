@@ -2,6 +2,8 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { login, signup } from './services/auth'
+import AuthCard from './components/AuthCard'
+import { useTheme } from './context/ThemeContext'
 import './App.css'
 
 const initialLogin = {
@@ -26,6 +28,7 @@ function App() {
     | null
   >(null)
   const navigate = useNavigate()
+  const { theme, toggleTheme } = useTheme()
 
   const activeTitle = mode === 'login' ? 'Welcome back' : 'Create your free account'
   const activeDescription =
@@ -35,13 +38,7 @@ function App() {
 
   const activeForm = mode === 'login' ? loginForm : signupForm
   const buttonLabel = mode === 'login' ? 'Sign in' : 'Sign up'
-  const switchLabel = mode === 'login' ? "Don't have an account?" : 'Already registered?'
   const switchAction = mode === 'login' ? 'Create account' : 'Sign in'
-
-  const helperText =
-    mode === 'login'
-      ? 'Use the email address associated with your account.'
-      : 'Choose a strong password with 8+ characters, including one number and one symbol.'
 
   const handleInputChange = (field: string, value: string) => {
     setNotification(null)
@@ -63,11 +60,11 @@ function App() {
     setNotification(null)
     setIsBusy(true)
 
+
     try {
       if (mode === 'login') {
         const response = await login(loginForm)
-        // Normalize token key (backend returns `token`) and save user payload
-        const userPayload = { ...response, accessToken: (response as any).accessToken ?? (response as any).token }
+        const userPayload = { ...response, accessToken: response.accessToken ?? response.token }
         localStorage.setItem('user', JSON.stringify(userPayload))
         setNotification({ type: 'success', text: `Welcome back, ${response.name}!` })
         navigate('/dashboard')
@@ -91,58 +88,15 @@ function App() {
   }
 
   return (
-    <div className="auth-shell">
-      <div className="app-layout">
-        <section className="hero-panel">
-          <span className="hero-badge">Secure authentication</span>
-          <h1>Beautiful login & signup flows built for modern web apps</h1>
-          <p>
-            A polished experience with clear validation, responsive layout, and seamless transition
-            between sign in and registration.
-          </p>
-
-          <div className="hero-features">
-            <article>
-              <strong>Fast entry</strong>
-              <span>Minimal form steps and clear actions keep users moving.</span>
-            </article>
-            <article>
-              <strong>Trusted security</strong>
-              <span>Ready to connect to your Spring Boot auth backend with secure token handling.</span>
-            </article>
-            <article>
-              <strong>Adaptive UI</strong>
-              <span>Responsive styles scale beautifully from desktop to mobile.</span>
-            </article>
-          </div>
-
-          <div className="hero-footer">
-            <div className="hero-stat">
-              <strong>99.9%</strong>
-              <span>Uptime-ready UI</span>
-            </div>
-            <div className="hero-stat">
-              <strong>2x</strong>
-              <span>Better conversion</span>
-            </div>
-          </div>
-        </section>
-
-        <main className="auth-card">
-          <div className="auth-header">
-            <div>
-              <p className="eyebrow">Authentication</p>
-              <h2>{activeTitle}</h2>
-            </div>
-            <div className="switch-control">
-              <span>{switchLabel}</span>
-              <button type="button" className="switch-button" onClick={handleModeToggle}>
-                {switchAction}
-              </button>
-            </div>
-          </div>
-
-          <p className="auth-copy">{activeDescription}</p>
+    <div className="auth-shell modern">
+      <button className="theme-toggle-btn" onClick={toggleTheme}>
+        {theme === 'light' ? '🌙 Dark' : '🌞 Light'}
+      </button>
+      <div className="auth-wrap">
+        <AuthCard>
+          <div className="auth-brand">PAIVA</div>
+          <h2 className="auth-title">{activeTitle}</h2>
+          <p className="auth-sub">{activeDescription}</p>
 
           <form className="auth-form" onSubmit={handleSubmit}>
             {mode === 'signup' && (
@@ -193,11 +147,14 @@ function App() {
               />
             </label>
 
-            <p className="field-hint">{helperText}</p>
-
-            <button className="submit-button" type="submit" disabled={isBusy}>
-              {isBusy ? 'Processing…' : buttonLabel}
-            </button>
+            <div className="form-actions">
+              <button className="submit-button" type="submit" disabled={isBusy}>
+                {isBusy ? 'Processing…' : buttonLabel}
+              </button>
+              <button type="button" className="link" onClick={handleModeToggle}>
+                {switchAction}
+              </button>
+            </div>
 
             {notification && (
               <div className={`status-message ${notification.type}`}>
@@ -205,7 +162,7 @@ function App() {
               </div>
             )}
           </form>
-        </main>
+        </AuthCard>
       </div>
     </div>
   )
