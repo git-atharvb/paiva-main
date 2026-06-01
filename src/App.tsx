@@ -13,10 +13,10 @@ function App() {
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const { theme, toggleTheme } = useTheme()
 
-  const activeTitle = mode === 'login' ? 'Welcome Back' : 'Create Account'
+  const activeTitle = mode === 'login' ? 'PAIVA' : 'Create Account'
   const activeDescription =
     mode === 'login'
-      ? 'Personalized AI Virtual Assistant'
+      ? 'Personalized AI Virtual Assistant Welcomes You'
       : 'Start Your Secure Journey with Frictionless Onboarding'
 
   const handleToggleMode = () => {

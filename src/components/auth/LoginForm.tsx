@@ -9,6 +9,7 @@ import { login, googleLogin } from '../../services/auth';
 import { useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import type { CredentialResponse } from '@react-oauth/google';
+import { useTheme } from '../../context/ThemeContext';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address.'),
@@ -24,6 +25,7 @@ interface LoginFormProps {
 export default function LoginForm({ onToggleMode }: LoginFormProps) {
   const [isBusy, setIsBusy] = useState(false);
   const navigate = useNavigate();
+  const { theme } = useTheme();
 
   const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     setIsBusy(true);
@@ -74,7 +76,7 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
   };
 
   return (
-    <form className="grid gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500" onSubmit={handleSubmit(onSubmit)}>
+    <form className="flex flex-col gap-5 animate-in fade-in slide-in-from-bottom-4 duration-500" onSubmit={handleSubmit(onSubmit)}>
       <Input
         label="Email"
         type="email"
@@ -91,35 +93,32 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
         {...register('password')}
       />
 
-      <div className="flex justify-end -mt-4 mb-2">
+      <div className="flex justify-end -mt-3 mb-1">
         <Button variant="ghost" size="sm" type="button" onClick={() => toast.error('Forgot password flow is under construction.')}>
           Forgot password ?
         </Button>
       </div>
 
-      <div className="flex flex-col gap-4 mt-2">
+      <div className="flex flex-col gap-4 mt-1">
         <Button variant="primary" size="lg" type="submit" isLoading={isBusy} className="w-full">
           Sign in
         </Button>
         
-        <div className="relative my-2">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-muted" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              Or continue with
-            </span>
-          </div>
+        <div className="flex items-center gap-3 my-4">
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent to-border" />
+          <span className="text-xs uppercase text-muted-foreground/70 font-semibold tracking-widest">
+            Or continue with
+          </span>
+          <div className="flex-1 h-px bg-gradient-to-l from-transparent to-border" />
         </div>
 
-        <div className="flex justify-center w-full">
+        <div className="flex justify-center w-full transform transition-transform duration-300 hover:scale-[1.02]">
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={handleGoogleError}
-            width="100%"
             useOneTap
-            theme="outline"
+            theme={theme === 'dark' ? 'filled_blue' : 'outline'}
+            shape="pill"
           />
         </div>
 

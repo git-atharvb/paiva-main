@@ -15,7 +15,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const id = useId();
 
     return (
-      <div className="relative mb-7 text-left w-full group">
+      <div className="relative text-left w-full group">
         <div className="relative w-full">
           <input
             id={id}

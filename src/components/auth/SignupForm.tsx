@@ -60,7 +60,7 @@ export default function SignupForm({ onToggleMode, onSuccess }: SignupFormProps)
   };
 
   return (
-    <form className="grid gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500" onSubmit={handleSubmit(onSubmit)}>
+    <form className="flex flex-col gap-5 animate-in fade-in slide-in-from-bottom-4 duration-500" onSubmit={handleSubmit(onSubmit)}>
       <Input
         label="Full Name"
         type="text"
@@ -97,7 +97,7 @@ export default function SignupForm({ onToggleMode, onSuccess }: SignupFormProps)
         {...register('confirmPassword')}
       />
 
-      <div className="flex flex-col gap-4 mt-4">
+      <div className="flex flex-col gap-4 mt-2">
         <Button variant="primary" size="lg" type="submit" isLoading={isBusy} className="w-full">
           Sign up
         </Button>
