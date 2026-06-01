@@ -14,6 +14,11 @@ async function post<T>(path: string, body: object): Promise<T> {
   const payload = await response.json().catch(() => null)
 
   if (!response.ok) {
+    // If backend returns a validation error map (e.g., Map<String, String>)
+    if (payload && typeof payload === 'object' && !payload.message && !payload.error && Object.keys(payload).length > 0 && !payload.status) {
+      const firstErrorKey = Object.keys(payload)[0];
+      throw new Error(payload[firstErrorKey]);
+    }
     const message = payload?.message || payload?.error || response.statusText || 'Request failed'
     throw new Error(message)
   }
