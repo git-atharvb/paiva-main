@@ -15,6 +15,9 @@ public class User {
     private String email;
     private String password;
     private String name;
+    
+    private AuthProvider provider = AuthProvider.LOCAL;
+    private String providerId;
 
     @CreatedDate
     private Instant createdAt;
@@ -110,5 +113,21 @@ public class User {
 
     public void setLockTime(Instant lockTime) {
         this.lockTime = lockTime;
+    }
+
+    public AuthProvider getProvider() {
+        return provider;
+    }
+
+    public void setProvider(AuthProvider provider) {
+        this.provider = provider;
+    }
+
+    public String getProviderId() {
+        return providerId;
+    }
+
+    public void setProviderId(String providerId) {
+        this.providerId = providerId;
     }
 }

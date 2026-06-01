@@ -1,5 +1,6 @@
 package com.paiva.controllers;
 
+import com.paiva.payload.request.GoogleLoginRequest;
 import com.paiva.payload.request.LoginRequest;
 import com.paiva.payload.request.SignupRequest;
 import com.paiva.payload.request.TokenRefreshRequest;
@@ -34,5 +35,14 @@ public class AuthController {
     @PostMapping("/refreshtoken")
     public ResponseEntity<?> refreshtoken(@Valid @RequestBody TokenRefreshRequest request) {
         return ResponseEntity.ok(authService.refreshToken(request));
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<?> authenticateGoogleUser(@Valid @RequestBody GoogleLoginRequest googleLoginRequest) {
+        try {
+            return ResponseEntity.ok(authService.authenticateGoogleUser(googleLoginRequest));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new com.paiva.payload.response.MessageResponse("Google authentication failed: " + e.getMessage()));
+        }
     }
 }

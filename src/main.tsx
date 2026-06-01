@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider } from './context/ThemeContext'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 import './index.css'
 import { Suspense, lazy } from 'react';
 import App from './App';
@@ -11,9 +12,10 @@ const Dashboard = lazy(() => import('./Dashboard'));
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ThemeProvider>
-      <BrowserRouter>
-        <Routes>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || '684113538725-1bkdm6t6gq96i2es8nl5pcb6vl54apu8.apps.googleusercontent.com'}>
+      <ThemeProvider>
+        <BrowserRouter>
+          <Routes>
           <Route path="/" element={<App />} />
           <Route
             path="/dashboard"
@@ -29,5 +31,6 @@ createRoot(document.getElementById('root')!).render(
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
+    </GoogleOAuthProvider>
   </StrictMode>,
 )

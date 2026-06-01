@@ -1,17 +1,7 @@
 package com.paiva.security.service;
 
-import com.paiva.exception.AccountLockedException;
-import com.paiva.exception.TokenRefreshException;
-import com.paiva.model.RefreshToken;
-import com.paiva.model.User;
-import com.paiva.payload.request.LoginRequest;
-import com.paiva.payload.request.SignupRequest;
-import com.paiva.payload.request.TokenRefreshRequest;
-import com.paiva.payload.response.JwtResponse;
-import com.paiva.payload.response.MessageResponse;
-import com.paiva.payload.response.TokenRefreshResponse;
-import com.paiva.repository.UserRepository;
-import com.paiva.security.jwt.JwtUtils;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -23,11 +13,32 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import com.paiva.exception.AccountLockedException;
+import com.paiva.exception.TokenRefreshException;
+import com.paiva.model.AuthProvider;
+import com.paiva.model.RefreshToken;
+import com.paiva.model.User;
+import com.paiva.payload.request.GoogleLoginRequest;
+import com.paiva.payload.request.LoginRequest;
+import com.paiva.payload.request.SignupRequest;
+import com.paiva.payload.request.TokenRefreshRequest;
+import com.paiva.payload.response.JwtResponse;
+import com.paiva.payload.response.MessageResponse;
+import com.paiva.payload.response.TokenRefreshResponse;
+import com.paiva.repository.UserRepository;
+import com.paiva.security.jwt.JwtUtils;
+
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.Optional;
 
 @Service
 public class AuthService {
+
+    @org.springframework.beans.factory.annotation.Value("${spring.security.oauth2.client.registration.google.client-id}")
+    private String googleClientId;
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -117,5 +128,52 @@ public class AuthService {
                 })
                 .orElseThrow(() -> new TokenRefreshException(requestRefreshToken,
                         "Refresh token is not in database!"));
+    }
+
+    public JwtResponse authenticateGoogleUser(GoogleLoginRequest googleLoginRequest) throws Exception {
+        GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
+                .setAudience(java.util.Collections.singletonList(googleClientId))
+                .build();
+
+        GoogleIdToken idToken = verifier.verify(googleLoginRequest.getIdToken());
+        if (idToken != null) {
+            GoogleIdToken.Payload payload = idToken.getPayload();
+
+            String email = payload.getEmail();
+            String name = (String) payload.get("name");
+            String googleId = payload.getSubject();
+
+            Optional<User> userOpt = userRepository.findByEmail(email);
+            User user;
+            if (userOpt.isPresent()) {
+                user = userOpt.get();
+                // Optionally update provider if they signed up with email before
+                if (user.getProvider() != AuthProvider.GOOGLE) {
+                    user.setProvider(AuthProvider.GOOGLE);
+                    user.setProviderId(googleId);
+                    userRepository.save(user);
+                }
+            } else {
+                user = new User(email, null, name);
+                user.setProvider(AuthProvider.GOOGLE);
+                user.setProviderId(googleId);
+                userRepository.save(user);
+            }
+
+            UserDetailsImpl userDetails = UserDetailsImpl.build(user);
+            
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities());
+            
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String jwt = jwtUtils.generateJwtToken(authentication);
+            
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
+            
+            return new JwtResponse(jwt, refreshToken.getToken(), userDetails.getId(),
+                    userDetails.getName(), userDetails.getUsername());
+        } else {
+            throw new Exception("Invalid ID token.");
+        }
     }
 }

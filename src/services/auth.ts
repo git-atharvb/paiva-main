@@ -33,3 +33,7 @@ export function login(data: LoginRequest): Promise<JwtResponse> {
 export function signup(data: SignupRequest): Promise<{ message: string }> {
   return post<{ message: string }>('/api/auth/signup', data)
 }
+
+export function googleLogin(idToken: string): Promise<JwtResponse> {
+  return post<JwtResponse>('/api/auth/google', { idToken })
+}

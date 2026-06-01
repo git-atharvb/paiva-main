@@ -5,8 +5,10 @@ import * as z from 'zod';
 import toast from 'react-hot-toast';
 import Input from '../Input';
 import { Button } from '../ui/Button';
-import { login } from '../../services/auth';
+import { login, googleLogin } from '../../services/auth';
 import { useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
+import type { CredentialResponse } from '@react-oauth/google';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address.'),
@@ -22,6 +24,30 @@ interface LoginFormProps {
 export default function LoginForm({ onToggleMode }: LoginFormProps) {
   const [isBusy, setIsBusy] = useState(false);
   const navigate = useNavigate();
+
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    setIsBusy(true);
+    try {
+      if (credentialResponse.credential) {
+        const response = await googleLogin(credentialResponse.credential);
+        const userPayload = { ...response, accessToken: response.token };
+        localStorage.setItem('user', JSON.stringify(userPayload));
+        toast.success(`Welcome to Paiva, ${response.name || 'User'}!`);
+        navigate('/dashboard');
+      } else {
+        toast.error('Google sign in failed. No token received.');
+      }
+    } catch(err) {
+      const message = err instanceof Error ? err.message : 'Unable to sign in with Google.';
+      toast.error(message);
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    toast.error('Google sign in was unsuccessful. Please try again.');
+  };
 
   const {
     register,
@@ -75,7 +101,29 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
         <Button variant="primary" size="lg" type="submit" isLoading={isBusy} className="w-full">
           Sign in
         </Button>
-        <Button variant="ghost" size="md" type="button" onClick={onToggleMode} className="w-full">
+        
+        <div className="relative my-2">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-muted" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Or continue with
+            </span>
+          </div>
+        </div>
+
+        <div className="flex justify-center w-full">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            width="100%"
+            useOneTap
+            theme="outline"
+          />
+        </div>
+
+        <Button variant="ghost" size="md" type="button" onClick={onToggleMode} className="w-full mt-2">
           Create account
         </Button>
       </div>
