@@ -1,110 +1,463 @@
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   CUSTOM DARK-MODE VARIANT
+   Scoped to [data-theme="dark"] so ThemeContext drives everything.
+   ───────────────────────────────────────────────────────────────────────────── */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   DESIGN TOKENS  —  OKLCH COLOR SPACE
+   Philosophy:
+     • Light mode  → high-L (≥ 0.96), low-C surfaces; rich-C primaries
+     • Dark mode   → low-L (≤ 0.16) obsidian surfaces; vibrant-C primaries
+     • Chroma      → kept symmetric across hues so no colour "pops" unexpectedly
+     • Hue anchor  → 280° (blue-violet) unifies primary, ring, and neon accents
+   ───────────────────────────────────────────────────────────────────────────── */
 @theme {
-  /* OKLCH-based Premium Palette */
-  --color-background: oklch(0.985 0.005 250);
-  --color-foreground: oklch(0.145 0.015 250);
-  
-  --color-primary: oklch(0.6 0.25 285);
-  --color-primary-foreground: oklch(0.985 0 0);
-  
-  --color-secondary: oklch(0.96 0.01 250);
-  --color-secondary-foreground: oklch(0.2 0.02 250);
-  
-  --color-border: oklch(0.92 0.01 250);
-  --color-input: oklch(0.92 0.01 250);
-  --color-ring: oklch(0.6 0.25 285);
-  
-  --radius-lg: 1rem;
-  --radius-xl: 1.5rem;
+  /* ── Fonts ── */
+  --font-sans: 'Inter', 'Outfit', system-ui, -apple-system, sans-serif;
+
+  /* ── Light-mode Semantic Tokens (default) ── */
+
+  /* Surfaces */
+  --color-background:   oklch(0.982 0.004 252);   /* near-white with faint violet cast */
+  --color-foreground:   oklch(0.142 0.022 252);   /* deep slate — not pure black */
+
+  /* Primary (vivid violet) */
+  --color-primary:          oklch(0.58 0.255 283);
+  --color-primary-foreground: oklch(0.99  0     0);
+
+  /* Secondary (soft surface) */
+  --color-secondary:            oklch(0.955 0.012 252);
+  --color-secondary-foreground: oklch(0.22  0.018 252);
+
+  /* Muted text / surfaces */
+  --color-muted:            oklch(0.945 0.008 252);
+  --color-muted-foreground: oklch(0.54  0.018 252);
+
+  /* Card glass surface */
+  --color-card:             oklch(0.99  0.003 252);
+  --color-card-foreground:  oklch(0.142 0.022 252);
+
+  /* Destructive (warm red) */
+  --color-destructive:            oklch(0.58 0.22  25);
+  --color-destructive-foreground: oklch(0.99  0    0);
+
+  /* Accent (cyan-teal) */
+  --color-accent:            oklch(0.945 0.018 200);
+  --color-accent-foreground: oklch(0.22  0.022 200);
+
+  /* Chrome */
+  --color-border: oklch(0.88 0.012 252);
+  --color-input:  oklch(0.93 0.008 252);
+  --color-ring:   oklch(0.58 0.255 283);
+
+  /* ── Radii ── */
+  --radius-sm:  0.5rem;
+  --radius-md:  0.75rem;
+  --radius-lg:  1rem;
+  --radius-xl:  1.5rem;
   --radius-2xl: 2rem;
+  --radius-3xl: 3rem;
+  --radius-full: 9999px;
 
-  --shadow-premium: 0 40px 80px -20px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05);
-  --shadow-premium-dark: 0 50px 100px -20px rgba(0, 0, 0, 0.8), 0 0 50px rgba(124, 58, 237, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.1);
-  --shadow-neon: 0 0 30px oklch(0.6 0.25 285 / 0.4), 0 0 60px oklch(0.6 0.25 285 / 0.2);
+  /* ── Elevation / Shadow System ── */
+  /* Level 0 — flush / border only */
+  --shadow-0: 0 0 0 1px oklch(0.88 0.012 252 / 0.6);
 
-  --animate-gradient-x: gradient-x 20s ease infinite;
-  --animate-spotlight: spotlight 4s ease-in-out infinite alternate;
+  /* Level 1 — card resting state */
+  --shadow-1:
+    0 1px 3px  oklch(0 0 0 / 0.06),
+    0 4px 8px  oklch(0 0 0 / 0.04),
+    0 0 0 1px  oklch(0.88 0.012 252 / 0.5);
+
+  /* Level 2 — elevated panel / sidebar */
+  --shadow-2:
+    0 4px  12px oklch(0 0 0 / 0.06),
+    0 16px 32px oklch(0 0 0 / 0.06),
+    0 0    0 1px oklch(0.88 0.012 252 / 0.4);
+
+  /* Level 3 — modal / dialog */
+  --shadow-3:
+    0 8px  24px oklch(0 0 0 / 0.08),
+    0 32px 64px oklch(0 0 0 / 0.10),
+    0 0    0 1px oklch(0.88 0.012 252 / 0.3);
+
+  /* Premium surface — auth card */
+  --shadow-premium:
+    0  2px  4px  oklch(0 0 0 / 0.04),
+    0  8px  20px oklch(0 0 0 / 0.07),
+    0 40px  80px oklch(0 0 0 / 0.08),
+    0  0    0  1px oklch(0.88 0.012 252 / 0.45),
+    inset 0 1px 0 oklch(1 0 0 / 0.7);
+
+  /* Dark-mode premium — obsidian w/ neon halo */
+  --shadow-premium-dark:
+    0  4px  12px oklch(0 0 0 / 0.5),
+    0 24px  56px oklch(0 0 0 / 0.7),
+    0  0   80px  oklch(0.58 0.255 283 / 0.14),
+    0  0    0  1px oklch(1 0 0 / 0.06),
+    inset 0 1px 0 oklch(1 0 0 / 0.06);
+
+  /* Neon glow for interactive highlights */
+  --shadow-neon:
+    0 0  16px oklch(0.58 0.255 283 / 0.50),
+    0 0  40px oklch(0.58 0.255 283 / 0.25),
+    0 0  80px oklch(0.58 0.255 283 / 0.10);
+
+  --shadow-neon-sm:
+    0 0  8px  oklch(0.58 0.255 283 / 0.45),
+    0 0  20px oklch(0.58 0.255 283 / 0.20);
+
+  /* ── Animations ── */
+  --animate-gradient-x:  gradient-x 18s ease infinite;
+  --animate-spotlight:   spotlight  5s ease-in-out infinite alternate;
   --animate-border-spin: border-spin 4s linear infinite;
+  --animate-shimmer:     shimmer    2.4s linear infinite;
+  --animate-pulse-glow:  pulse-glow 3s ease-in-out infinite;
+  --animate-float:       float      6s ease-in-out infinite;
 
   @keyframes gradient-x {
-    0%, 100% { background-size: 200% 200%; background-position: left center; }
-    50% { background-size: 200% 200%; background-position: right center; }
+    0%, 100% { background-size: 220% 220%; background-position: left   center; }
+    50%       { background-size: 220% 220%; background-position: right  center; }
   }
-
   @keyframes spotlight {
-    0% { transform: translate(-20%, -20%) scale(1); opacity: 0.5; }
-    100% { transform: translate(20%, 20%) scale(1.2); opacity: 0.8; }
+    0%   { transform: translate(-18%, -18%) scale(1.0); opacity: 0.45; }
+    100% { transform: translate( 18%,  18%) scale(1.25); opacity: 0.80; }
   }
-  
   @keyframes border-spin {
     100% { transform: rotate(360deg); }
   }
-}
-
-[data-theme='dark'] {
-  --color-background: oklch(0.15 0.02 255);
-  --color-foreground: oklch(0.985 0.005 250);
-  
-  --color-primary: oklch(0.65 0.25 285);
-  --color-primary-foreground: oklch(0.985 0 0);
-  
-  --color-secondary: oklch(0.2 0.03 260);
-  --color-secondary-foreground: oklch(0.985 0.005 250);
-  
-  --color-border: oklch(0.22 0.03 260);
-  --color-input: oklch(0.22 0.03 260);
-  --color-ring: oklch(0.65 0.25 285);
-}
-
-@layer base {
-  * {
-    border-color: var(--color-border);
+  @keyframes shimmer {
+    from { background-position:  0%   center; }
+    to   { background-position: -200% center; }
   }
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: var(--shadow-neon-sm); }
+    50%       { box-shadow: var(--shadow-neon); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px);   }
+    50%       { transform: translateY(-6px);  }
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   DARK-MODE TOKEN OVERRIDES
+   Strategy:
+     • Background  → obsidian L=0.12, slight blue-violet C=0.022
+     • Foreground  → near-white L=0.97, very low C to avoid blue tint
+     • Primary     → slightly brighter L=0.66 (same C) for contrast on dark surfaces
+     • Borders     → luminosity-matched to surface to avoid harsh lines
+   ───────────────────────────────────────────────────────────────────────────── */
+[data-theme='dark'] {
+  --color-background:   oklch(0.122 0.022 258);   /* deep obsidian */
+  --color-foreground:   oklch(0.970 0.006 252);   /* soft-white */
+
+  --color-primary:           oklch(0.66  0.250 283);
+  --color-primary-foreground: oklch(0.99  0     0);
+
+  --color-secondary:            oklch(0.190 0.028 260);
+  --color-secondary-foreground: oklch(0.970 0.006 252);
+
+  --color-muted:            oklch(0.175 0.020 258);
+  --color-muted-foreground: oklch(0.560 0.020 258);
+
+  --color-card:            oklch(0.160 0.024 258);
+  --color-card-foreground: oklch(0.970 0.006 252);
+
+  --color-destructive:            oklch(0.62 0.24  20);
+  --color-destructive-foreground: oklch(0.99  0     0);
+
+  --color-accent:            oklch(0.185 0.025 200);
+  --color-accent-foreground: oklch(0.82  0.030 200);
+
+  --color-border: oklch(0.245 0.028 260);
+  --color-input:  oklch(0.200 0.024 260);
+  --color-ring:   oklch(0.66  0.250 283);
+
+  /* Dark-mode shadow overrides (tighten neon chroma boost) */
+  --shadow-0:
+    0 0 0 1px oklch(1 0 0 / 0.06);
+  --shadow-1:
+    0 1px 3px  oklch(0 0 0 / 0.40),
+    0 4px 8px  oklch(0 0 0 / 0.30),
+    0 0 0 1px  oklch(1 0 0 / 0.06);
+  --shadow-2:
+    0 4px  12px oklch(0 0 0 / 0.50),
+    0 16px 32px oklch(0 0 0 / 0.40),
+    0 0    0 1px oklch(1 0 0 / 0.05);
+  --shadow-3:
+    0  8px 24px oklch(0 0 0 / 0.60),
+    0 32px 64px oklch(0 0 0 / 0.70),
+    0 0    0 1px oklch(1 0 0 / 0.06);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   BASE LAYER — global resets and typography
+   ───────────────────────────────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after {
+    border-color: var(--color-border);
+    box-sizing: border-box;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    /* Enable Inter's optical size axis and ligatures */
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    transition: background-color 0.7s ease, color 0.7s ease;
+    line-height: 1.6;
+    letter-spacing: -0.011em;          /* subtle tight tracking for dense UI */
+    transition: background-color 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+                color 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Headings: tighter tracking scales with size */
+  h1 { letter-spacing: -0.035em; line-height: 1.08; }
+  h2 { letter-spacing: -0.025em; line-height: 1.15; }
+  h3 { letter-spacing: -0.018em; line-height: 1.25; }
+  h4 { letter-spacing: -0.012em; line-height: 1.30; }
+  h5, h6 { letter-spacing: -0.006em; }
+
+  /* Mono code */
+  code, pre, kbd {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+    font-feature-settings: "liga" 1, "calt" 1;
+    letter-spacing: 0;
+  }
+
+  /* Focus ring — keyboard-only, theme-aware */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 3px;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 0 0 4px oklch(from var(--color-ring) l c h / 0.20);
+    transition: box-shadow 0.15s ease;
+  }
+
+  /* Remove default focus ring when not keyboard-navigating */
+  :focus:not(:focus-visible) {
+    outline: none;
+    box-shadow: none;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar        { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track  { background: transparent; }
+  ::-webkit-scrollbar-thumb  { background: var(--color-border); border-radius: var(--radius-full); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-muted-foreground); }
+
+  /* Selection */
+  ::selection {
+    background: oklch(0.58 0.255 283 / 0.22);
+    color: var(--color-foreground);
+  }
+  [data-theme='dark'] ::selection {
+    background: oklch(0.66 0.250 283 / 0.35);
   }
 }
 
-/* Premium Glass Noise Texture */
+/* ─────────────────────────────────────────────────────────────────────────────
+   NOISE TEXTURE  —  Frosted glass grain
+   Light:  very subtle overlay, mix-blend: overlay → enhances depth without grit
+   Dark:   slightly stronger, mix-blend: color-dodge → lifts edge highlights
+   ───────────────────────────────────────────────────────────────────────────── */
 .bg-noise {
   position: relative;
+  isolation: isolate;
 }
+
 .bg-noise::before {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  opacity: 0.032;
   pointer-events: none;
   z-index: 1;
   mix-blend-mode: overlay;
+  border-radius: inherit;
 }
+
 [data-theme='dark'] .bg-noise::before {
-  opacity: 0.06;
+  opacity: 0.055;
   mix-blend-mode: color-dodge;
 }
 
-/* Premium Aurora Background (Skyblue, Pink, Yellow, Violet) */
+/* ─────────────────────────────────────────────────────────────────────────────
+   AURORA BACKGROUND
+   Light: Soft pastel radials — sky-blue, rose, lemon, violet
+          Low opacity so white surfaces stay clean and readable
+   Dark:  Deep saturated radials — electric indigo, vivid magenta, amber
+          Positioned asymmetrically to create layered volumetric depth
+   ───────────────────────────────────────────────────────────────────────────── */
 .bg-aurora {
-  background-image: 
-    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.4) 0%, transparent 60%),
-    radial-gradient(circle at 100% 100%, rgba(244, 114, 182, 0.4) 0%, rgba(253, 224, 71, 0.25) 40%, transparent 70%),
-    radial-gradient(circle at 0% 100%, rgba(139, 92, 246, 0.4) 0%, transparent 60%);
+  background-image:
+    radial-gradient(ellipse 80% 60% at  0%   0%, oklch(0.72 0.13 220 / 0.30) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 50% at 100% 100%, oklch(0.70 0.18 340 / 0.25) 0%, oklch(0.88 0.14 85 / 0.15) 45%, transparent 70%),
+    radial-gradient(ellipse 70% 55% at  0%  100%, oklch(0.65 0.20 290 / 0.25) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 45% at 100%   0%, oklch(0.78 0.12 190 / 0.18) 0%, transparent 60%);
+  background-attachment: fixed;
 }
 
 [data-theme='dark'] .bg-aurora {
-  background-image: 
-    radial-gradient(circle at 0% 0%, rgba(2, 132, 199, 0.4) 0%, transparent 60%),
-    radial-gradient(circle at 100% 100%, rgba(190, 24, 93, 0.3) 0%, rgba(161, 98, 7, 0.2) 40%, transparent 70%),
-    radial-gradient(circle at 0% 100%, rgba(91, 33, 182, 0.3) 0%, transparent 60%);
+  background-image:
+    /* Electric cobalt top-left */
+    radial-gradient(ellipse 75% 55% at   0%   0%, oklch(0.38 0.18 260 / 0.55) 0%, transparent 65%),
+    /* Deep magenta bottom-right */
+    radial-gradient(ellipse 65% 50% at 100% 100%, oklch(0.40 0.22 320 / 0.45) 0%, oklch(0.32 0.14  60 / 0.25) 50%, transparent 72%),
+    /* Violet bottom-left */
+    radial-gradient(ellipse 70% 60% at   0%  100%, oklch(0.32 0.20 290 / 0.40) 0%, transparent 65%),
+    /* Teal accent top-right */
+    radial-gradient(ellipse 50% 40% at 100%    0%, oklch(0.36 0.16 195 / 0.30) 0%, transparent 60%);
+  background-attachment: fixed;
 }
 
-/* Base utilities */
+/* ─────────────────────────────────────────────────────────────────────────────
+   GLASS SURFACE UTILITY
+   Used by cards, sidebar, and header panels.
+   Light: highly translucent frosted white with bright inner-top edge
+   Dark:  deep obsidian with neon border highlight and volumetric shadow
+   ───────────────────────────────────────────────────────────────────────────── */
+.glass-surface {
+  background: oklch(0.99 0.002 252 / 0.72);
+  backdrop-filter: blur(28px) saturate(1.6) brightness(1.04);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6) brightness(1.04);
+  border: 1px solid oklch(0.88 0.012 252 / 0.55);
+  box-shadow:
+    var(--shadow-2),
+    inset 0 1px 0 oklch(1 0 0 / 0.80),
+    inset 0 -1px 0 oklch(0 0 0 / 0.04);
+  transition:
+    box-shadow    0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color  0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    background    0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-/* Cleaned up redundant mesh classes */
+[data-theme='dark'] .glass-surface {
+  background: oklch(0.148 0.022 258 / 0.85);
+  backdrop-filter: blur(28px) saturate(1.8) brightness(0.96);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8) brightness(0.96);
+  border: 1px solid oklch(0.245 0.028 260 / 0.70);
+  box-shadow:
+    var(--shadow-2),
+    inset 0 1px 0 oklch(1 0 0 / 0.055),
+    inset 0 -1px 0 oklch(0 0 0 / 0.30);
+}
+
+.glass-surface:hover {
+  border-color: oklch(0.58 0.255 283 / 0.30);
+  box-shadow:
+    var(--shadow-3),
+    inset 0 1px 0 oklch(1 0 0 / 0.85),
+    inset 0 -1px 0 oklch(0 0 0 / 0.04);
+}
+
+[data-theme='dark'] .glass-surface:hover {
+  border-color: oklch(0.66 0.250 283 / 0.40);
+  box-shadow:
+    var(--shadow-premium-dark);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   NEON GLOW UTILITY  —  applied to primary surfaces when active/hovered
+   ───────────────────────────────────────────────────────────────────────────── */
+.glow-primary {
+  box-shadow: var(--shadow-neon);
+  transition: box-shadow 0.3s ease;
+}
+
+.glow-primary-sm {
+  box-shadow: var(--shadow-neon-sm);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   INTERACTIVE ELEMENT STATE TRANSITIONS
+   Spring-like cubic-bezier (0.34, 1.56, 0.64, 1) creates an overshoot feel
+   matched to tailwindcss-animate for consistent motion.
+   ───────────────────────────────────────────────────────────────────────────── */
+.interactive {
+  transition:
+    transform     0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow    0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color  0.20s ease,
+    opacity       0.20s ease;
+}
+
+.interactive:hover  { transform: translateY(-1px) scale(1.015); }
+.interactive:active { transform: translateY(0px)  scale(0.97);  transition-timing-function: ease; }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   TYPOGRAPHY UTILITIES  —  explicit tracking and leading
+   ───────────────────────────────────────────────────────────────────────────── */
+.text-display {
+  font-size: clamp(2.5rem, 5vw + 1rem, 5rem);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.04em;
+}
+
+.text-heading {
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.022em;
+}
+
+.text-label {
+  font-size: 0.6875rem;    /* 11px */
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+
+.text-body {
+  line-height: 1.65;
+  letter-spacing: -0.006em;
+}
+
+.text-caption {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   GRADIENT TEXT
+   ───────────────────────────────────────────────────────────────────────────── */
+.text-gradient-primary {
+  background: linear-gradient(
+    135deg,
+    oklch(0.58 0.255 283) 0%,
+    oklch(0.62 0.22  250) 40%,
+    oklch(0.66 0.22  220) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+[data-theme='dark'] .text-gradient-primary {
+  background: linear-gradient(
+    135deg,
+    oklch(0.76 0.22  283) 0%,
+    oklch(0.72 0.20  250) 40%,
+    oklch(0.68 0.18  220) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
