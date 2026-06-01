@@ -90,6 +90,21 @@
   mix-blend-mode: color-dodge;
 }
 
+/* Premium Aurora Background (Skyblue, Pink, Yellow, Violet) */
+.bg-aurora {
+  background-image: 
+    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.4) 0%, transparent 60%),
+    radial-gradient(circle at 100% 100%, rgba(244, 114, 182, 0.4) 0%, rgba(253, 224, 71, 0.25) 40%, transparent 70%),
+    radial-gradient(circle at 0% 100%, rgba(139, 92, 246, 0.4) 0%, transparent 60%);
+}
+
+[data-theme='dark'] .bg-aurora {
+  background-image: 
+    radial-gradient(circle at 0% 0%, rgba(2, 132, 199, 0.4) 0%, transparent 60%),
+    radial-gradient(circle at 100% 100%, rgba(190, 24, 93, 0.3) 0%, rgba(161, 98, 7, 0.2) 40%, transparent 70%),
+    radial-gradient(circle at 0% 100%, rgba(91, 33, 182, 0.3) 0%, transparent 60%);
+}
+
 /* Base utilities */
 
 /* Cleaned up redundant mesh classes */

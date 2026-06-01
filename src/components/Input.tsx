@@ -33,7 +33,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <label
             htmlFor={id}
             className={cn(
-              "absolute left-4 top-4 text-muted-foreground transition-transform duration-200 ease-out pointer-events-none origin-[0]",
+              "absolute left-4 top-4 text-muted-foreground transition-transform duration-200 ease-out pointer-events-none origin-left",
               "peer-focus:-translate-y-6 peer-focus:scale-75 peer-focus:text-primary peer-focus:font-semibold",
               "peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100",
               "peer-[:not(:placeholder-shown)]:-translate-y-6 peer-[:not(:placeholder-shown)]:scale-75",

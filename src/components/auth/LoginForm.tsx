@@ -50,7 +50,7 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
   return (
     <form className="grid gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500" onSubmit={handleSubmit(onSubmit)}>
       <Input
-        label="Email address"
+        label="Email"
         type="email"
         autoComplete="email"
         error={errors.email?.message}
@@ -67,7 +67,7 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
 
       <div className="flex justify-end -mt-4 mb-2">
         <Button variant="ghost" size="sm" type="button" onClick={() => toast.error('Forgot password flow is under construction.')}>
-          Forgot password?
+          Forgot password ?
         </Button>
       </div>
 

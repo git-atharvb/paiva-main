@@ -7,7 +7,7 @@ export default function Header({ userName, onLogout }: { userName?: string; onLo
 
   return (
     <>
-      <div className="font-black text-xl tracking-widest bg-linear-to-br from-primary to-blue-500 bg-clip-text text-transparent select-none">
+      <div className="font-black text-xl tracking-widest bg-linear-to-br from-primary to-blue-500 bg-clip-text text-transparent select-none hidden sm:block">
         PAIVA
       </div>
       <nav className="flex items-center gap-4 md:gap-6">

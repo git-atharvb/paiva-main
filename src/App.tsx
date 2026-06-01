@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Sun, Moon } from 'lucide-react';
 import AuthCard from './components/AuthCard';
+import paivaLogo from './assets/paiva_logo.png';
 import { useTheme } from './context/ThemeContext'
 import LoginForm from './components/auth/LoginForm'
 import SignupForm from './components/auth/SignupForm'
@@ -11,11 +12,11 @@ function App() {
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const { theme, toggleTheme } = useTheme()
 
-  const activeTitle = mode === 'login' ? 'Welcome back' : 'Create your free account'
+  const activeTitle = mode === 'login' ? 'Welcome Back' : 'Create Your Account'
   const activeDescription =
     mode === 'login'
-      ? 'Sign in to manage your profile, access protected resources, and continue where you left off.'
-      : 'Start your secure journey with a polished auth experience designed for frictionless onboarding.'
+      ? 'Personalized AI Virtual Assistant'
+      : 'Start Your Secure Journey with Frictionless Onboarding'
 
   const handleToggleMode = () => {
     setMode(current => (current === 'login' ? 'signup' : 'login'))
@@ -26,10 +27,8 @@ function App() {
   }
 
   return (
-    <div className="w-full min-h-dvh flex items-center justify-center p-6 relative overflow-hidden transition-colors duration-700 bg-background">
-      {/* High-Performance Bright Mesh Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-blue-400/40 via-transparent to-transparent dark:from-blue-900/40 opacity-80" />
-      <div className="absolute inset-0 overflow-hidden pointer-events-none bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-fuchsia-400/40 via-transparent to-transparent dark:from-purple-900/40 opacity-80" />
+    <div className="w-full min-h-dvh flex items-center justify-center p-6 relative overflow-hidden transition-colors duration-700 bg-background bg-aurora">
+      {/* Subtle grid overlay for texture */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+CjxwYXRoIGQ9Ik0wIDBoNDB2NDBIMHoiIGZpbGw9Im5vbmUiLz4KPHBhdGggZD0iTTAgMGg0MHYxSDB6bTAgNDBoMXYtNDBoLTEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz4KPC9zdmc+')] mix-blend-overlay" />
       <Toaster 
         position="top-right" 
@@ -51,13 +50,20 @@ function App() {
       </button>
       <div className="flex w-full justify-center relative perspective-[1500px] z-10 animate-in fade-in zoom-in-95 duration-1000 ease-out">
         <AuthCard>
-          <div className="inline-flex px-4 py-1.5 rounded-full bg-primary/10 text-primary font-extrabold tracking-widest text-xs uppercase mb-6 border border-primary/20 shadow-[0_0_15px_rgba(124,58,237,0.15)]">
-            PAIVA
+          <div className="flex justify-center mb-10 w-full animate-in fade-in zoom-in-75 duration-700 delay-100">
+            <div className="relative size-28 md:size-32 group cursor-default">
+              <div className="absolute inset-0 bg-primary/30 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+              <img 
+                src={paivaLogo} 
+                alt="Paiva Logo" 
+                className="w-full h-full object-contain rounded-3xl drop-shadow-2xl relative z-10 transition-transform duration-700 group-hover:scale-110 outline-none border-none ring-0" 
+              />
+            </div>
           </div>
-          <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight leading-tight text-foreground mb-4">
+          <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight leading-tight text-foreground mb-4 text-center">
             {activeTitle}
           </h2>
-          <p className="text-muted-foreground leading-relaxed mb-10 text-lg">
+          <p className="text-muted-foreground leading-relaxed mb-10 text-lg text-center">
             {activeDescription}
           </p>
 

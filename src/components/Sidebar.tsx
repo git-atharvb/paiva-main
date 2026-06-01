@@ -1,4 +1,5 @@
 import { MessageSquare, Settings } from 'lucide-react';
+import paivaLogo from '../assets/paiva_logo.png';
 
 const conversations = [
   { id: '1', title: 'Plan UI Redesign' },
@@ -9,9 +10,14 @@ const conversations = [
 export default function Sidebar() {
   return (
     <aside className="w-full h-full flex flex-col p-6 text-foreground bg-transparent">
-      <div className="flex items-center gap-3 mb-10 px-2 animate-in fade-in slide-in-from-left-4 duration-500">
-        <div className="size-10 rounded-2xl bg-linear-to-br from-primary to-blue-600 flex items-center justify-center shadow-neon text-white font-bold text-xl shrink-0">
-          P
+      <div className="flex items-center gap-4 mb-10 px-2 animate-in fade-in slide-in-from-left-4 duration-500">
+        <div className="relative size-12 shrink-0 group cursor-default">
+          <div className="absolute inset-0 bg-primary/30 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+          <img 
+            src={paivaLogo} 
+            alt="Paiva Logo" 
+            className="w-full h-full object-contain rounded-xl drop-shadow-lg relative z-10 transition-transform duration-700 group-hover:scale-110 outline-none border-none ring-0" 
+          />
         </div>
         <span className="font-bold text-xl tracking-tight">Workspace</span>
       </div>

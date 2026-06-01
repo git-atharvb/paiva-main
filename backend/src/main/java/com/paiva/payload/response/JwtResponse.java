@@ -6,7 +6,7 @@ public class JwtResponse {
     private String refreshToken;
     private String id;
     private String name;
-    private String email;
+    private final String email;
 
     public JwtResponse(String accessToken, String refreshToken, String id, String name, String email) {
         this.token = accessToken;

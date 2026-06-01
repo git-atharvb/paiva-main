@@ -8,10 +8,8 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ header, sidebar, children }: DashboardLayoutProps) {
   return (
-    <div className="flex h-dvh w-full overflow-hidden bg-background transition-colors duration-700">
-      {/* High-Performance Bright Mesh Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-blue-400/40 via-transparent to-transparent dark:from-blue-900/40 opacity-80 z-0" />
-      <div className="absolute inset-0 overflow-hidden pointer-events-none bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-fuchsia-400/40 via-transparent to-transparent dark:from-purple-900/40 opacity-80 z-0" />
+    <div className="flex h-dvh w-full overflow-hidden transition-colors duration-700 bg-background bg-aurora relative">
+      {/* Subtle grid overlay for texture */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+CjxwYXRoIGQ9Ik0wIDBoNDB2NDBIMHoiIGZpbGw9Im5vbmUiLz4KPHBhdGggZD0iTTAgMGg0MHYxSDB6bTAgNDBoMXYtNDBoLTEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz4KPC9zdmc+')] mix-blend-overlay z-0" />
       
       {/* Floating Sidebar (Bento Box style) */}
