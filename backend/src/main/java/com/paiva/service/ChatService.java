@@ -21,6 +21,7 @@ public class ChatService {
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
     private final com.paiva.repository.UserRepository userRepository;
+    private final WebSearchService webSearchService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @org.springframework.beans.factory.annotation.Value("${spring.ai.openai.api-key}")
@@ -34,11 +35,13 @@ public class ChatService {
 
     public ChatService(ConversationRepository conversationRepository, 
                        MessageRepository messageRepository,
-                       com.paiva.repository.UserRepository userRepository) {
+                       com.paiva.repository.UserRepository userRepository,
+                       WebSearchService webSearchService) {
                            
         this.conversationRepository = conversationRepository;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
+        this.webSearchService = webSearchService;
     }
 
     public Conversation createOrGetConversation(String conversationId, String userId, String firstMessage) {
@@ -69,10 +72,29 @@ public class ChatService {
             .orElse("");
 
         // Construct System Prompt
-        String systemPrompt = "You are PAIVA, a highly advanced personalized AI virtual assistant. Be helpful, concise, and friendly.";
+        String currentDate = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("MMMM d, yyyy"));
+        String systemPrompt = "You are PAIVA, a highly advanced personalized AI virtual assistant. Be helpful, concise, and friendly.\n" +
+            "The current date is " + currentDate + ". Keep this in mind when answering questions about current events.\n" +
+            "IMPORTANT VISUAL FEATURE: If the user asks about a famous person, place, event, recipe, or common object, you MUST provide a relevant image.\n" +
+            "To do this, output exactly the following markdown syntax on a new line before your text response:\n" +
+            "![Alt Text](wiki:Search_Term)\n" +
+            "For example, if the user asks 'who is president of america', output:\n" +
+            "![Donald Trump](wiki:Donald_Trump)\n" +
+            "If they ask for an Omelette recipe, output:\n" +
+            "![Omelette](wiki:Omelette)\n" +
+            "Always replace spaces with underscores in the Search_Term.";
                               
         if (customInstructions != null && !customInstructions.isBlank()) {
             systemPrompt += "\n\nCRITICAL INSTRUCTIONS FROM USER (You must follow these):\n" + customInstructions;
+        }
+
+        // Live Web Search Injection
+        boolean needsSearch = userMessageText.matches("(?i).*\\b(who|what|where|when|current|today|2024|2025|2026|latest|news|won|election|president|price)\\b.*");
+        if (needsSearch) {
+            String searchResults = webSearchService.search(userMessageText);
+            if (searchResults != null) {
+                systemPrompt += "\n\nLIVE WEB SEARCH RESULTS (Use this real-time data to answer accurately):\n" + searchResults;
+            }
         }
 
         List<Map<String, String>> messagesList = new ArrayList<>();
