@@ -18,6 +18,8 @@ public class User {
     
     private AuthProvider provider = AuthProvider.LOCAL;
     private String providerId;
+    
+    private String customInstructions;
 
     @CreatedDate
     private Instant createdAt;
@@ -129,5 +131,13 @@ public class User {
 
     public void setProviderId(String providerId) {
         this.providerId = providerId;
+    }
+
+    public String getCustomInstructions() {
+        return customInstructions;
+    }
+
+    public void setCustomInstructions(String customInstructions) {
+        this.customInstructions = customInstructions;
     }
 }

@@ -1,14 +1,41 @@
-import { MessageSquare, Settings, Plus, ChevronRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { MessageSquare, Settings, Plus, Trash, Pencil, Check, X as XIcon } from 'lucide-react';
 import paivaLogo from '../assets/paiva_logo.png';
 import { cn } from '../lib/utils';
-
-const conversations = [
-  { id: '1', title: 'Plan UI Redesign',       active: true },
-  { id: '2', title: 'Implement Tailwind v4',  active: false },
-  { id: '3', title: 'Fix API Endpoints',      active: false },
-];
+import { useChat } from '../context/ChatContext';
+import SettingsModal from './SettingsModal';
+import { chatService } from '../services/chatService';
 
 export default function Sidebar() {
+  const { conversations, activeConversationId, setActiveConversationId, refreshConversations } = useChat();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (confirm('Are you sure you want to delete this conversation?')) {
+      await chatService.deleteConversation(id);
+      if (activeConversationId === id) setActiveConversationId(null);
+      await refreshConversations();
+    }
+  };
+
+  const startRename = (e: React.MouseEvent, id: string, title: string) => {
+    e.stopPropagation();
+    setRenamingId(id);
+    setRenameValue(title);
+  };
+
+  const submitRename = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (renamingId && renameValue.trim()) {
+      await chatService.renameConversation(renamingId, renameValue.trim());
+      setRenamingId(null);
+      await refreshConversations();
+    }
+  };
+
   return (
     <aside className="w-full h-full flex flex-col p-5 text-foreground bg-transparent">
 
@@ -33,6 +60,7 @@ export default function Sidebar() {
 
       {/* ── New Chat button ───────────────────────────────────────── */}
       <button
+        onClick={() => setActiveConversationId(null)}
         className={cn(
           'mb-6 w-full flex items-center gap-2.5 px-4 py-3 rounded-xl',
           'bg-primary/10 dark:bg-primary/15',
@@ -62,6 +90,7 @@ export default function Sidebar() {
         {conversations.map((c, i) => (
           <div
             key={c.id}
+            onClick={() => setActiveConversationId(c.id)}
             className={cn(
               'group relative px-3.5 py-3 rounded-xl cursor-pointer',
               'flex items-center gap-3',
@@ -72,7 +101,7 @@ export default function Sidebar() {
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               'animate-in fade-in slide-in-from-left-4',
               // Active state
-              c.active
+              activeConversationId === c.id
                 ? 'bg-primary/12 dark:bg-primary/18 text-primary border border-primary/25 dark:border-primary/30 shadow-neon-sm'
                 : 'text-foreground hover:bg-secondary/55 hover:text-primary border border-transparent hover:border-border/50',
             )}
@@ -82,15 +111,34 @@ export default function Sidebar() {
           >
             <MessageSquare
               size={15}
-              strokeWidth={c.active ? 2.5 : 1.75}
+              strokeWidth={activeConversationId === c.id ? 2.5 : 1.75}
               className="shrink-0 transition-transform duration-200 group-hover:scale-110"
             />
-            <span className="truncate flex-1">{c.title}</span>
-            <ChevronRight
-              size={14}
-              strokeWidth={2}
-              className="shrink-0 opacity-0 group-hover:opacity-60 transition-all duration-200 -translate-x-1 group-hover:translate-x-0"
-            />
+            {renamingId === c.id ? (
+              <form onSubmit={submitRename} className="flex-1 flex items-center gap-1">
+                <input 
+                  autoFocus
+                  className="flex-1 bg-background text-foreground text-sm rounded px-1 outline-none border border-primary"
+                  value={renameValue}
+                  onChange={(e) => setRenameValue(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <button type="submit" className="p-1 hover:text-primary"><Check size={14} /></button>
+                <button type="button" onClick={(e) => { e.stopPropagation(); setRenamingId(null); }} className="p-1 hover:text-destructive"><XIcon size={14} /></button>
+              </form>
+            ) : (
+              <>
+                <span className="truncate flex-1">{c.title}</span>
+                <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={(e) => startRename(e, c.id, c.title)} className="p-1 text-muted-foreground hover:text-primary transition-colors">
+                    <Pencil size={14} />
+                  </button>
+                  <button onClick={(e) => handleDelete(e, c.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors">
+                    <Trash size={14} />
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         ))}
       </nav>
@@ -115,6 +163,7 @@ export default function Sidebar() {
             Manage workspace preferences.
           </div>
           <button
+            onClick={() => setIsSettingsOpen(true)}
             className={cn(
               'w-full py-2.5 rounded-xl text-xs font-bold tracking-wider',
               'bg-foreground/90 text-background',
@@ -130,6 +179,11 @@ export default function Sidebar() {
           </button>
         </div>
       </div>
+
+      <SettingsModal 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)} 
+      />
     </aside>
   );
 }

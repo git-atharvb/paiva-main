@@ -5,6 +5,7 @@ import Header from './components/Header'
 import Sidebar from './components/Sidebar'
 import ChatArea from './components/ChatArea'
 import { DashboardLayout } from './components/layout/DashboardLayout'
+import { ChatProvider } from './context/ChatContext'
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -32,11 +33,13 @@ export default function Dashboard() {
   }
 
   return (
-    <DashboardLayout
-      header={<Header userName={user?.name} onLogout={handleLogout} />}
-      sidebar={<Sidebar />}
-    >
-      <ChatArea />
-    </DashboardLayout>
+    <ChatProvider>
+      <DashboardLayout
+        header={<Header userName={user?.name} onLogout={handleLogout} />}
+        sidebar={<Sidebar />}
+      >
+        <ChatArea />
+      </DashboardLayout>
+    </ChatProvider>
   )
 }
