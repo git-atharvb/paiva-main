@@ -3,6 +3,7 @@ package com.paiva.payload.request;
 public class ChatRequest {
     private String conversationId;
     private String message;
+    private boolean contextImageEnabled;
 
     public ChatRequest() {}
 
@@ -25,5 +26,13 @@ public class ChatRequest {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public boolean isContextImageEnabled() {
+        return contextImageEnabled;
+    }
+
+    public void setContextImageEnabled(boolean contextImageEnabled) {
+        this.contextImageEnabled = contextImageEnabled;
     }
 }

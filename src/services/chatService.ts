@@ -51,6 +51,7 @@ export const chatService = {
   streamMessage: async (
     conversationId: string | null,
     message: string,
+    contextImageEnabled: boolean,
     onChunk: (data: { conversationId?: string, c?: string }) => void,
     onComplete: () => void,
     onError: (err: Error) => void,
@@ -70,7 +71,7 @@ export const chatService = {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ conversationId, message }),
+        body: JSON.stringify({ conversationId, message, contextImageEnabled }),
         signal
       });
 

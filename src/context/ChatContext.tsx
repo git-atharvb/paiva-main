@@ -14,6 +14,7 @@ interface ChatContextType {
   conversations: Conversation[];
   activeConversationId: string | null;
   setActiveConversationId: (id: string | null) => void;
+  setConversationIdWithoutFetch: (id: string) => void;
   messages: ChatMessage[];
   setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
   refreshConversations: () => Promise<void>;
@@ -27,6 +28,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const skipNextFetch = React.useRef(false);
+
+  const setConversationIdWithoutFetch = useCallback((id: string) => {
+    skipNextFetch.current = true;
+    setActiveConversationId(id);
+  }, []);
 
   const refreshConversations = useCallback(async () => {
     try {
@@ -61,6 +68,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    if (skipNextFetch.current) {
+      skipNextFetch.current = false;
+      return;
+    }
+
     let isMounted = true;
     // eslint-disable-next-line
     setIsLoadingHistory(true);
@@ -92,6 +104,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         conversations,
         activeConversationId,
         setActiveConversationId,
+        setConversationIdWithoutFetch,
         messages,
         setMessages,
         refreshConversations,

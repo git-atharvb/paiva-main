@@ -56,7 +56,7 @@ public class ChatService {
     }
 
     @SuppressWarnings("UseSpecificCatch")
-    public Flux<String> streamChat(String conversationId, String userId, String userMessageText) {
+    public Flux<String> streamChat(String conversationId, String userId, String userMessageText, boolean contextImageEnabled) {
         Conversation conversation = createOrGetConversation(conversationId, userId, userMessageText);
         
         // Save user message to MongoDB
@@ -74,15 +74,20 @@ public class ChatService {
         // Construct System Prompt
         String currentDate = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("MMMM d, yyyy"));
         String systemPrompt = "You are PAIVA, a highly advanced personalized AI virtual assistant. Be helpful, concise, and friendly.\n" +
-            "The current date is " + currentDate + ". Keep this in mind when answering questions about current events.\n" +
-            "IMPORTANT VISUAL FEATURE: If the user asks about a famous person, place, event, recipe, or common object, you MUST provide a relevant image.\n" +
+            "The current date is " + currentDate + ". Keep this in mind when answering questions about current events.\n";
+            
+        if (contextImageEnabled) {
+            systemPrompt += "IMPORTANT VISUAL FEATURE: If the user asks about a famous person, place, event, recipe, or common object, you MUST provide a relevant image.\n" +
             "To do this, output exactly the following markdown syntax on a new line before your text response:\n" +
             "![Alt Text](wiki:Search_Term)\n" +
             "For example, if the user asks 'who is president of america', output:\n" +
             "![Donald Trump](wiki:Donald_Trump)\n" +
             "If they ask for an Omelette recipe, output:\n" +
             "![Omelette](wiki:Omelette)\n" +
-            "Always replace spaces with underscores in the Search_Term.";
+            "Always replace spaces with underscores in the Search_Term.\n";
+        } else {
+            systemPrompt += "CRITICAL INSTRUCTION: The user has DISABLED images for this request. Do NOT output any markdown images or wiki: links under any circumstances, even if you did so previously. ONLY output plain text.\n";
+        }
                               
         if (customInstructions != null && !customInstructions.isBlank()) {
             systemPrompt += "\n\nCRITICAL INSTRUCTIONS FROM USER (You must follow these):\n" + customInstructions;
@@ -91,9 +96,18 @@ public class ChatService {
         // Live Web Search Injection
         boolean needsSearch = userMessageText.matches("(?i).*\\b(who|what|where|when|current|today|2024|2025|2026|latest|news|won|election|president|price)\\b.*");
         if (needsSearch) {
-            String searchResults = webSearchService.search(userMessageText);
+            String queryForSearch = userMessageText;
+            if (userMessageText.toLowerCase().matches(".*\\b(current|today|latest|now)\\b.*")) {
+                queryForSearch += " " + java.time.LocalDate.now().getYear();
+            }
+            String searchResults = webSearchService.search(queryForSearch);
             if (searchResults != null) {
-                systemPrompt += "\n\nLIVE WEB SEARCH RESULTS (Use this real-time data to answer accurately):\n" + searchResults;
+                systemPrompt += "\n\n=========================================\n" +
+                                "CRITICAL LIVE WEB SEARCH RESULTS\n" +
+                                "=========================================\n" +
+                                "You MUST use the following real-time data to answer the user's query.\n" +
+                                "This data is from the live internet and OVERRIDES your outdated internal training data.\n\n" + 
+                                searchResults + "\n=========================================\n";
             }
         }
 
@@ -101,7 +115,14 @@ public class ChatService {
         messagesList.add(Map.of("role", "system", "content", systemPrompt));
         for (Message msg : history) {
             String role = "USER".equals(msg.getRole()) ? "user" : "assistant";
-            messagesList.add(Map.of("role", role, "content", msg.getContent()));
+            String content = msg.getContent();
+            
+            // If images are disabled, hide previous image tags from the AI to prevent it from copying its past behavior
+            if (!contextImageEnabled && "assistant".equals(role)) {
+                content = content.replaceAll("!\\[.*?\\]\\(wiki:[^)]+\\)", "").trim();
+            }
+            
+            messagesList.add(Map.of("role", role, "content", content));
         }
 
         Map<String, Object> requestBody = Map.of(

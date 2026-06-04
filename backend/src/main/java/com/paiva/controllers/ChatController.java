@@ -29,7 +29,7 @@ public class ChatController {
     public Flux<String> streamChat(@RequestBody ChatRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        return chatService.streamChat(request.getConversationId(), userDetails.getId(), request.getMessage());
+        return chatService.streamChat(request.getConversationId(), userDetails.getId(), request.getMessage(), request.isContextImageEnabled());
     }
 
     @GetMapping("/conversations")
