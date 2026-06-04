@@ -1,19 +1,21 @@
 package com.paiva.service;
 
-import org.springframework.stereotype.Service;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.JsonNode;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.time.Duration;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class ImageSearchService {
@@ -25,6 +27,7 @@ public class ImageSearchService {
             
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    @SuppressWarnings({"UseSpecificCatch", "CallToPrintStackTrace"})
     public List<String> searchImages(String query) {
         List<String> imageUrls = new ArrayList<>();
         try {

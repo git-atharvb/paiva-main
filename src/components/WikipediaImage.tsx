@@ -5,8 +5,7 @@ import { cn } from '../lib/utils';
 import { fetchWithAuth } from '../services/api';
 
 interface WikipediaImageProps {
-  searchTerm: string;
-  alt?: string;
+  matches: { term: string, alt: string }[];
   className?: string;
 }
 
@@ -61,7 +60,7 @@ function ImageItem({
   return (
     <figure 
       onClick={() => onExpand(url)}
-      className={cn("overflow-hidden rounded-xl border border-border/50 shadow-md bg-black/5 dark:bg-black/20 group relative flex items-center justify-center cursor-zoom-in shrink-0", className)}
+      className={cn("overflow-hidden rounded-xl border border-border/50 shadow-md bg-black/5 dark:bg-black/20 group relative flex items-center justify-center cursor-zoom-in shrink-0 min-h-0 min-w-0", className)}
       style={style}
     >
       <img
@@ -93,60 +92,61 @@ function ImageItem({
   );
 }
 
-export default function WikipediaImage({ searchTerm, alt, className }: WikipediaImageProps) {
-  const cachedUrls = globalImageCache[searchTerm];
-
-  const [imageUrls, setImageUrls] = useState<string[]>(cachedUrls || []);
-  const [loading, setLoading] = useState(!cachedUrls);
-  const [error, setError] = useState(false);
-  const [maximizedUrl, setMaximizedUrl] = useState<string | null>(null);
+export default function WikipediaImage({ matches, className }: WikipediaImageProps) {
+  const [images, setImages] = useState<{url: string, term: string, alt: string}[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [maximizedItem, setMaximizedItem] = useState<{url: string, term: string, alt: string} | null>(null);
 
   useEffect(() => {
-    if (globalImageCache[searchTerm]) {
-      return;
-    }
-
     let isMounted = true;
     setLoading(true);
-    setError(false);
 
-    const fetchImage = async () => {
-      try {
-        const response = await fetchWithAuth(`/api/images/search?q=${encodeURIComponent(searchTerm)}`);
-        const urls = await response.json();
-        
-        if (!isMounted) return;
-
-        if (urls && urls.length > 0) {
-          globalImageCache[searchTerm] = urls;
-          setImageUrls(urls);
-        } else {
-          setError(true);
+    const fetchAll = async () => {
+      const results: {url: string, term: string, alt: string}[] = [];
+      for (const match of matches) {
+        const { term, alt } = match;
+        if (globalImageCache[term] && globalImageCache[term].length > 0) {
+           results.push({ url: globalImageCache[term][0], term, alt });
+           continue;
         }
-      } catch (err) {
-        if (isMounted) setError(true);
-      } finally {
-        if (isMounted) setLoading(false);
+        try {
+           const response = await fetchWithAuth(`/api/images/search?q=${encodeURIComponent(term)}`);
+           const urls = await response.json();
+           if (urls && urls.length > 0) {
+             globalImageCache[term] = urls;
+             results.push({ url: urls[0], term, alt });
+           }
+        } catch (err) {
+           // silently ignore failures for individual terms to let others load
+        }
+      }
+      if (isMounted) {
+        setImages(results);
+        setLoading(false);
       }
     };
 
-    fetchImage();
+    if (matches && matches.length > 0) {
+        fetchAll();
+    } else {
+        setLoading(false);
+    }
 
     return () => {
       isMounted = false;
     };
-  }, [searchTerm]);
+  }, [JSON.stringify(matches)]);
 
   const handleRemoveUrl = (failedUrl: string) => {
-    setImageUrls(prev => prev.filter(u => u !== failedUrl));
+    setImages(prev => prev.filter(img => img.url !== failedUrl));
   };
 
   const handleDownloadMaximized = async (e: React.MouseEvent) => {
-    if (!maximizedUrl) return;
+    if (!maximizedItem) return;
     e.preventDefault();
     e.stopPropagation();
     try {
-      const response = await fetchWithAuth(`/api/images/download?url=${encodeURIComponent(maximizedUrl)}`);
+      const response = await fetchWithAuth(`/api/images/download?url=${encodeURIComponent(maximizedItem.url)}`);
       const blob = await response.blob();
       const objUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -157,23 +157,17 @@ export default function WikipediaImage({ searchTerm, alt, className }: Wikipedia
       else if (contentType?.includes('gif')) ext = 'gif';
       else if (contentType?.includes('webp')) ext = 'webp';
       
-      link.download = `${searchTerm.replace(/_/g, '-')}.${ext}`;
+      link.download = `${maximizedItem.term.replace(/_/g, '-')}.${ext}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(objUrl);
     } catch (err) {
-      window.open(maximizedUrl, '_blank');
+      window.open(maximizedItem.url, '_blank');
     }
   };
 
-  if (error) {
-    return null;
-  }
-
-  const displayUrls = imageUrls.slice(0, 3);
-
-  if (loading || displayUrls.length === 0) {
+  if (loading) {
     return (
       <div className={cn("w-[400px] shrink-0 animate-pulse bg-muted rounded-xl border border-border/50 flex items-center justify-center my-4 shadow-sm max-w-[85vw]", className)} style={{ minHeight: '300px' }}>
         <ImageIcon className="text-muted-foreground/30" size={32} />
@@ -181,71 +175,84 @@ export default function WikipediaImage({ searchTerm, alt, className }: Wikipedia
     );
   }
 
-  const altText = alt || searchTerm.replace(/_/g, ' ');
+  if (images.length === 0) return null;
 
   return (
     <>
       <div className={cn("my-4 w-[400px] max-w-[85vw] shrink-0 flex flex-col", className)}>
         
         {/* Layout for 1 Image */}
-        {displayUrls.length === 1 && (
+        {images.length === 1 && (
           <ImageItem 
-            url={displayUrls[0]} alt={altText} searchTerm={searchTerm}
+            url={images[0].url} alt={images[0].alt} searchTerm={images[0].term}
             className="w-full h-full min-h-[300px]" 
-            onExpand={setMaximizedUrl} onRemove={handleRemoveUrl}
+            onExpand={() => setMaximizedItem(images[0])} onRemove={handleRemoveUrl}
             isSingle={true}
           />
         )}
 
         {/* Layout for 2 Images */}
-        {displayUrls.length === 2 && (
+        {images.length === 2 && (
           <div className="flex gap-2 w-full h-full min-h-[200px]">
             <ImageItem 
-              url={displayUrls[0]} alt={altText} searchTerm={searchTerm}
+              url={images[0].url} alt={images[0].alt} searchTerm={images[0].term}
               className="flex-1 h-full" 
-              onExpand={setMaximizedUrl} onRemove={handleRemoveUrl}
+              onExpand={() => setMaximizedItem(images[0])} onRemove={handleRemoveUrl}
             />
             <ImageItem 
-              url={displayUrls[1]} alt={altText} searchTerm={searchTerm}
+              url={images[1].url} alt={images[1].alt} searchTerm={images[1].term}
               className="flex-1 h-full" 
-              onExpand={setMaximizedUrl} onRemove={handleRemoveUrl}
+              onExpand={() => setMaximizedItem(images[1])} onRemove={handleRemoveUrl}
             />
           </div>
         )}
 
         {/* Layout for 3 Images */}
-        {displayUrls.length === 3 && (
+        {images.length === 3 && (
           <div className="flex flex-col gap-2 w-full h-full min-h-[320px]">
             <ImageItem 
-              url={displayUrls[0]} alt={altText} searchTerm={searchTerm}
+              url={images[0].url} alt={images[0].alt} searchTerm={images[0].term}
               className="w-full" style={{ flex: 3, minHeight: '180px' }}
-              onExpand={setMaximizedUrl} onRemove={handleRemoveUrl}
+              onExpand={() => setMaximizedItem(images[0])} onRemove={handleRemoveUrl}
             />
             <div className="flex gap-2 w-full" style={{ flex: 2, minHeight: '120px' }}>
               <ImageItem 
-                url={displayUrls[1]} alt={altText} searchTerm={searchTerm}
+                url={images[1].url} alt={images[1].alt} searchTerm={images[1].term}
                 className="flex-1 h-full" 
-                onExpand={setMaximizedUrl} onRemove={handleRemoveUrl}
+                onExpand={() => setMaximizedItem(images[1])} onRemove={handleRemoveUrl}
               />
               <ImageItem 
-                url={displayUrls[2]} alt={altText} searchTerm={searchTerm}
+                url={images[2].url} alt={images[2].alt} searchTerm={images[2].term}
                 className="flex-1 h-full" 
-                onExpand={setMaximizedUrl} onRemove={handleRemoveUrl}
+                onExpand={() => setMaximizedItem(images[2])} onRemove={handleRemoveUrl}
               />
             </div>
+          </div>
+        )}
+
+        {/* Layout for 4+ Images */}
+        {images.length >= 4 && (
+          <div className="grid grid-cols-2 grid-rows-2 gap-2 w-full h-full min-h-[320px]">
+             {images.slice(0, 4).map((img, i) => (
+                <ImageItem 
+                  key={i} url={img.url} alt={img.alt} searchTerm={img.term} 
+                  className="w-full h-full" 
+                  onExpand={() => setMaximizedItem(img)} onRemove={handleRemoveUrl} 
+                />
+             ))}
           </div>
         )}
       </div>
 
       {/* Lightbox Overlay */}
-      {maximizedUrl && createPortal(
+      {maximizedItem && createPortal(
         <div 
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 cursor-zoom-out p-4 md:p-10"
-          onClick={() => setMaximizedUrl(null)}
+          onClick={() => setMaximizedItem(null)}
         >
           <img
-            src={maximizedUrl}
-            alt={altText}
+            src={maximizedItem.url}
+            alt={maximizedItem.alt}
             className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()} // Prevent click on image from closing
           />

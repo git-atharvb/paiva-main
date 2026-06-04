@@ -64,7 +64,13 @@ public class ChatService {
         messageRepository.save(userMessage);
 
         // Fetch short-term history from MongoDB
-        List<Message> history = messageRepository.findByConversationIdOrderByTimestampAsc(conversation.getId());
+        List<Message> fullHistory = messageRepository.findByConversationIdOrderByTimestampAsc(conversation.getId());
+        
+        // Implement Rolling Memory: only keep the last 10 messages to prevent token limit exhaustion
+        int maxHistoryMessages = 10;
+        List<Message> history = fullHistory.size() > maxHistoryMessages 
+            ? fullHistory.subList(fullHistory.size() - maxHistoryMessages, fullHistory.size()) 
+            : fullHistory;
         
         // Fetch User's Custom Instructions
         String customInstructions = userRepository.findById(userId)
@@ -73,18 +79,21 @@ public class ChatService {
 
         // Construct System Prompt
         String currentDate = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("MMMM d, yyyy"));
-        String systemPrompt = "You are PAIVA, a highly advanced personalized AI virtual assistant. Be helpful, concise, and friendly.\n" +
-            "The current date is " + currentDate + ". Keep this in mind when answering questions about current events.\n";
+        String systemPrompt = """
+                              You are PAIVA, a highly advanced personalized AI virtual assistant. Be helpful, concise, and friendly.
+                              The current date is """ + currentDate + ". Keep this in mind when answering questions about current events.\n";
             
         if (contextImageEnabled) {
-            systemPrompt += "IMPORTANT VISUAL FEATURE: If the user asks about a famous person, place, event, recipe, or common object, you MUST provide a relevant image.\n" +
-            "To do this, output exactly the following markdown syntax on a new line before your text response:\n" +
-            "![Alt Text](wiki:Search_Term)\n" +
-            "For example, if the user asks 'who is president of america', output:\n" +
-            "![Donald Trump](wiki:Donald_Trump)\n" +
-            "If they ask for an Omelette recipe, output:\n" +
-            "![Omelette](wiki:Omelette)\n" +
-            "Always replace spaces with underscores in the Search_Term.\n";
+            systemPrompt += """
+                            IMPORTANT VISUAL FEATURE: You MUST provide exactly 3 to 4 relevant images for different key concepts mentioned in your response.
+                            To do this, output exactly the following markdown syntax on new lines before your text response:
+                            ![Alt Text](wiki:Search_Term)
+                            For example, if the user asks 'who is president of america', output 3 different images:
+                            ![Donald Trump](wiki:Donald_Trump)
+                            ![White House](wiki:White_House)
+                            ![Washington DC](wiki:Washington_DC)
+                            Always replace spaces with underscores in the Search_Term. Do NOT output multiple images for the same concept.
+                            """;
         } else {
             systemPrompt += "CRITICAL INSTRUCTION: The user has DISABLED images for this request. Do NOT output any markdown images or wiki: links under any circumstances, even if you did so previously. ONLY output plain text.\n";
         }
@@ -94,20 +103,30 @@ public class ChatService {
         }
 
         // Live Web Search Injection
-        boolean needsSearch = userMessageText.matches("(?i).*\\b(who|what|where|when|current|today|2024|2025|2026|latest|news|won|election|president|price)\\b.*");
+        boolean needsSearch = userMessageText.matches("(?i).*\\b(who|what|where|when|current|today|2024|2025|2026|latest|news|won|election|president|price|how|is|does|will)\\b.*");
         if (needsSearch) {
+            String currentYear = String.valueOf(java.time.LocalDate.now().getYear());
             String queryForSearch = userMessageText;
-            if (userMessageText.toLowerCase().matches(".*\\b(current|today|latest|now)\\b.*")) {
-                queryForSearch += " " + java.time.LocalDate.now().getYear();
+            
+            // Force the search engine to pull the absolute newest data to combat LLM training cutoffs
+            if (!userMessageText.toLowerCase().matches(".*\\b(current|today|latest|now|2024|2025|2026)\\b.*")) {
+                queryForSearch += " latest current updates " + currentYear;
+            } else if (!userMessageText.contains(currentYear)) {
+                queryForSearch += " " + currentYear;
             }
+            
             String searchResults = webSearchService.search(queryForSearch);
             if (searchResults != null) {
-                systemPrompt += "\n\n=========================================\n" +
-                                "CRITICAL LIVE WEB SEARCH RESULTS\n" +
-                                "=========================================\n" +
-                                "You MUST use the following real-time data to answer the user's query.\n" +
-                                "This data is from the live internet and OVERRIDES your outdated internal training data.\n\n" + 
-                                searchResults + "\n=========================================\n";
+                systemPrompt += """
+                                
+
+                                =========================================
+                                CRITICAL LIVE WEB SEARCH RESULTS
+                                =========================================
+                                You MUST use the following real-time data to answer the user's query.
+                                This data is from the live internet and OVERRIDES your outdated internal training data.
+
+                                """ + searchResults + "\n=========================================\n";
             }
         }
 

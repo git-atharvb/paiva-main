@@ -166,7 +166,7 @@ export default function ChatArea() {
                           'border border-border/50 dark:border-border/40',
                           'text-foreground rounded-bl-sm',
                           'shadow-1',
-                          isContextMode ? 'max-w-full md:max-w-[95%] w-full' : 'max-w-[82%] prose prose-sm dark:prose-invert max-w-none'
+                          isContextMode ? 'max-w-full md:max-w-[95%] w-full' : 'max-w-[82%] prose prose-sm dark:prose-invert'
                         ].join(' ')
                       : [
                           'max-w-[82%]',
@@ -191,7 +191,7 @@ export default function ChatArea() {
                             img({ src, alt }) {
                               if (src?.startsWith('wiki:')) {
                                 const searchTerm = src.replace('wiki:', '');
-                                return <WikipediaImage searchTerm={searchTerm} alt={alt} />;
+                                return <WikipediaImage matches={[{ term: searchTerm, alt: alt || '' }]} />;
                               }
                               return <img src={src} alt={alt} className="rounded-xl max-w-full h-auto" />;
                             },
@@ -235,9 +235,7 @@ export default function ChatArea() {
                         return (
                           <div className="flex flex-col xl:flex-row gap-6 w-full items-start relative">
                             <div className={cn("w-full xl:w-1/2 shrink-0 flex flex-col gap-4 sticky top-4", isImageOnRight ? "xl:order-2" : "xl:order-1")}>
-                              {matches.map((match, idx) => (
-                                <WikipediaImage key={idx} searchTerm={match[2]} alt={match[1]} className="w-full max-w-full my-0 h-[350px] xl:h-[450px]" />
-                              ))}
+                              <WikipediaImage matches={matches.map(m => ({ alt: m[1], term: m[2] }))} className="w-full max-w-full my-0 h-[350px] xl:h-[450px]" />
                             </div>
                             <div className={cn("w-full xl:w-1/2 min-w-0 prose prose-sm dark:prose-invert max-w-none", isImageOnRight ? "xl:order-1" : "xl:order-2")}>
                               {renderMarkdown(cleanText)}
