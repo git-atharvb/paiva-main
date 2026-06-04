@@ -22,6 +22,8 @@ public class ChatService {
     private final MessageRepository messageRepository;
     private final com.paiva.repository.UserRepository userRepository;
     private final WebSearchService webSearchService;
+    private final YouTubeTranscriptService youTubeTranscriptService;
+    private final MemoryService memoryService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @org.springframework.beans.factory.annotation.Value("${spring.ai.openai.api-key}")
@@ -36,12 +38,16 @@ public class ChatService {
     public ChatService(ConversationRepository conversationRepository, 
                        MessageRepository messageRepository,
                        com.paiva.repository.UserRepository userRepository,
-                       WebSearchService webSearchService) {
+                       WebSearchService webSearchService,
+                       YouTubeTranscriptService youTubeTranscriptService,
+                       MemoryService memoryService) {
                            
         this.conversationRepository = conversationRepository;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
         this.webSearchService = webSearchService;
+        this.youTubeTranscriptService = youTubeTranscriptService;
+        this.memoryService = memoryService;
     }
 
     public Conversation createOrGetConversation(String conversationId, String userId, String firstMessage) {
@@ -56,7 +62,7 @@ public class ChatService {
     }
 
     @SuppressWarnings("UseSpecificCatch")
-    public Flux<String> streamChat(String conversationId, String userId, String userMessageText, boolean contextImageEnabled) {
+    public Flux<String> streamChat(String conversationId, String userId, String userMessageText, boolean contextImageEnabled, String aiModel, String attachedDocumentText, String attachedImageBase64, String userLocation) {
         Conversation conversation = createOrGetConversation(conversationId, userId, userMessageText);
         
         // Save user message to MongoDB
@@ -102,6 +108,56 @@ public class ChatService {
             systemPrompt += "\n\nCRITICAL INSTRUCTIONS FROM USER (You must follow these):\n" + customInstructions;
         }
 
+        // Long-Term Memory Injection
+        String longTermSummary = conversation.getSummary();
+        if (longTermSummary != null && !longTermSummary.isBlank()) {
+            systemPrompt += "\n\nLONG-TERM MEMORY (Summary of older messages in this chat):\n" + longTermSummary + "\n";
+        }
+
+        // URL Scraping Injection
+        java.util.regex.Matcher urlMatcher = java.util.regex.Pattern.compile("https?://[^\\s]+").matcher(userMessageText);
+        while (urlMatcher.find()) {
+            String url = urlMatcher.group();
+            
+            if (youTubeTranscriptService.isYouTubeUrl(url)) {
+                String transcript = youTubeTranscriptService.fetchTranscript(url);
+                if (transcript != null && !transcript.isEmpty()) {
+                    if (transcript.length() > 30000) {
+                        transcript = transcript.substring(0, 30000) + "...[TRUNCATED]";
+                    }
+                    systemPrompt += "\n\nCRITICAL YOUTUBE TRANSCRIPT:\nThe user referenced this YouTube video: " + url + "\nHere is the exact spoken transcript of the video. Use it to summarize or answer questions:\n" + transcript + "\n";
+                } else {
+                    systemPrompt += "\n\nCRITICAL YOUTUBE TRANSCRIPT:\nThe user referenced this YouTube video: " + url + "\nHowever, no transcript or closed captions could be found for this video.\n";
+                }
+                continue;
+            }
+            
+            try {
+                String scrapedText = org.jsoup.Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+                    .timeout(5000)
+                    .get()
+                    .body()
+                    .text();
+                if (scrapedText.length() > 15000) {
+                    scrapedText = scrapedText.substring(0, 15000) + "...[TRUNCATED]";
+                }
+                systemPrompt += "\n\nCRITICAL URL CONTEXT:\nThe user referenced this URL: " + url + "\nHere is the scraped text from that page to help you answer:\n" + scrapedText + "\n";
+            } catch (Exception e) {
+                systemPrompt += "\n\nCRITICAL URL CONTEXT:\nThe user referenced this URL: " + url + "\nHowever, the webpage could not be scraped due to an error or anti-bot protection.\n";
+            }
+        }
+
+        // PDF / Document Text Injection
+        if (attachedDocumentText != null && !attachedDocumentText.isBlank()) {
+            systemPrompt += "\n\nCRITICAL DOCUMENT CONTEXT:\nThe user has attached a document for you to analyze. Here is the extracted text:\n" + attachedDocumentText + "\n";
+        }
+
+        // Inject Location Context
+        if (userLocation != null && !userLocation.isBlank()) {
+            systemPrompt += "\n\nUSER LOCATION CONTEXT:\nThe user is currently located in: " + userLocation + ".\nIf they ask for local information (weather, places, etc.), use this location.\n";
+        }
+
         // Live Web Search Injection
         boolean needsSearch = userMessageText.matches("(?i).*\\b(who|what|where|when|current|today|2024|2025|2026|latest|news|won|election|president|price|how|is|does|will)\\b.*");
         if (needsSearch) {
@@ -130,9 +186,10 @@ public class ChatService {
             }
         }
 
-        List<Map<String, String>> messagesList = new ArrayList<>();
+        List<Map<String, Object>> messagesList = new ArrayList<>();
         messagesList.add(Map.of("role", "system", "content", systemPrompt));
-        for (Message msg : history) {
+        for (int i = 0; i < history.size(); i++) {
+            Message msg = history.get(i);
             String role = "USER".equals(msg.getRole()) ? "user" : "assistant";
             String content = msg.getContent();
             
@@ -141,11 +198,25 @@ public class ChatService {
                 content = content.replaceAll("!\\[.*?\\]\\(wiki:[^)]+\\)", "").trim();
             }
             
-            messagesList.add(Map.of("role", role, "content", content));
+            if ("user".equals(role) && i == history.size() - 1 && attachedImageBase64 != null && !attachedImageBase64.isBlank()) {
+                messagesList.add(Map.of(
+                    "role", role,
+                    "content", List.of(
+                        Map.of("type", "text", "text", content),
+                        Map.of("type", "image_url", "image_url", Map.of("url", attachedImageBase64))
+                    )
+                ));
+            } else {
+                messagesList.add(Map.of("role", role, "content", content));
+            }
         }
 
+        String selectedModel = (aiModel != null && !aiModel.isBlank()) ? aiModel : groqModel;
+        if (attachedImageBase64 != null && !attachedImageBase64.isBlank()) {
+            selectedModel = "llama-3.2-11b-vision-preview";
+        }
         Map<String, Object> requestBody = Map.of(
-            "model", groqModel,
+            "model", selectedModel,
             "stream", true,
             "messages", messagesList
         );
@@ -205,9 +276,13 @@ public class ChatService {
                 return reactor.core.publisher.Flux.empty();
             }
         })
-        .doOnComplete(() -> {
-            Message assistantMessage = new Message(conversation.getId(), "ASSISTANT", fullResponse.toString());
-            messageRepository.save(assistantMessage);
+        .doFinally(signalType -> {
+            // Save assistant message to MongoDB
+            Message asstMessage = new Message(conversation.getId(), "ASSISTANT", fullResponse.toString());
+            messageRepository.save(asstMessage);
+
+            // Trigger async summarization for older messages
+            memoryService.summarizeOldMessages(conversation.getId());
         });
     }
 

@@ -13,6 +13,7 @@ public class Message {
     private String role; // "USER" or "ASSISTANT" or "SYSTEM"
     private String content;
     private LocalDateTime timestamp;
+    private boolean summarized = false;
 
     public Message() {
     }
@@ -62,5 +63,13 @@ public class Message {
 
     public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public boolean isSummarized() {
+        return summarized;
+    }
+
+    public void setSummarized(boolean summarized) {
+        this.summarized = summarized;
     }
 }

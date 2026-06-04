@@ -13,6 +13,7 @@ public class Conversation {
     private String title;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String summary;
 
     public Conversation() {
     }
@@ -62,5 +63,13 @@ public class Conversation {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
     }
 }

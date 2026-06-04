@@ -1,6 +1,5 @@
 package com.paiva.service;
 
-import org.springframework.stereotype.Service;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -8,10 +7,12 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.List;
-import java.util.ArrayList;
+
+import org.springframework.stereotype.Service;
 
 @Service
 public class WebSearchService {
@@ -24,6 +25,7 @@ public class WebSearchService {
             .build();
     }
 
+    @SuppressWarnings({"CallToPrintStackTrace", "UseSpecificCatch"})
     public String search(String query) {
         try {
             String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);

@@ -52,6 +52,10 @@ export const chatService = {
     conversationId: string | null,
     message: string,
     contextImageEnabled: boolean,
+    aiModel: string | undefined,
+    attachedDocumentText: string | undefined,
+    attachedImageBase64: string | undefined,
+    userLocation: string | undefined,
     onChunk: (data: { conversationId?: string, c?: string }) => void,
     onComplete: () => void,
     onError: (err: Error) => void,
@@ -71,7 +75,7 @@ export const chatService = {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ conversationId, message, contextImageEnabled }),
+        body: JSON.stringify({ conversationId, message, contextImageEnabled, aiModel, attachedDocumentText, attachedImageBase64, userLocation }),
         signal
       });
 

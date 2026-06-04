@@ -3,6 +3,7 @@ import { X, Save } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from './ui/Button';
 import { userService } from '../services/userService';
+import { useTheme } from '../context/ThemeContext';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [instructions, setInstructions] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     if (isOpen && !isLoaded) {
@@ -49,7 +51,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-xl font-bold tracking-tight text-foreground">Custom Instructions</h2>
+          <h2 className="text-xl font-bold tracking-tight text-foreground">Settings</h2>
           <button 
             onClick={onClose}
             className="p-1.5 rounded-full hover:bg-secondary/50 transition-colors text-muted-foreground hover:text-foreground"
@@ -59,7 +61,27 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         </div>
 
         {/* Content */}
-        <div className="space-y-4">
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-foreground">App Theme</h3>
+            <select
+              value={theme}
+              onChange={(e) => setTheme(e.target.value as any)}
+              className={cn(
+                "w-full p-2.5 rounded-lg border border-border/50",
+                "bg-secondary/40 text-foreground text-sm",
+                "focus:outline-none focus:ring-2 focus:ring-primary/50"
+              )}
+            >
+              <option value="light">Light Mode</option>
+              <option value="dark">Dark Mode</option>
+              <option value="cyberpunk">Cyberpunk Neon</option>
+              <option value="midnight">Midnight AMOLED</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-foreground">Custom Instructions</h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
             What would you like PAIVA to know about you to provide better responses? 
             You can dictate formatting (e.g., "Always use bullet points") or tone (e.g., "Respond in a highly technical way").
@@ -77,6 +99,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               "transition-all duration-200"
             )}
           />
+          </div>
         </div>
 
         {/* Footer */}

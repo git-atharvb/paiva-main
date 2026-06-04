@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from './ui/Button';
-import { Send, Sparkles, Square, Copy, CheckCircle2 } from 'lucide-react';
+import { Send, Sparkles, Square, Copy, CheckCircle2, Paperclip, X, Image as ImageIcon, Link as LinkIcon, Mic, MicOff, Volume2, VolumeX, MonitorPlay, Download } from 'lucide-react';
 import { cn } from '../lib/utils';
 import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -9,6 +9,7 @@ import 'highlight.js/styles/github-dark.css';
 import { chatService } from '../services/chatService';
 import { useChat } from '../context/ChatContext';
 import WikipediaImage from './WikipediaImage';
+import { fetchWithAuth } from '../services/api';
 
 const extractText = (node: React.ReactNode): string => {
   if (typeof node === 'string') return node;
@@ -29,10 +30,194 @@ export default function ChatArea() {
 
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [contextImageEnabled, setContextImageEnabled] = useState(true);
+  const [contextImageEnabled, setContextImageEnabled] = useState(false);
+  const [aiModel, setAiModel] = useState('');
+  const [attachedDocumentText, setAttachedDocumentText] = useState<string | null>(null);
+  const [attachedImageBase64, setAttachedImageBase64] = useState<string | null>(null);
+  const [attachedFileName, setAttachedFileName] = useState<string | null>(null);
+  const [attachedUrl, setAttachedUrl] = useState<string | null>(null);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [showYoutubeInput, setShowYoutubeInput] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [userLocation, setUserLocation] = useState<string | null>(null);
+  
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const urlInputRef = useRef<HTMLInputElement>(null);
+  const youtubeInputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<any>(null);
+  
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [speakingId, setSpeakingId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const stopTTS = () => {
+    window.speechSynthesis.cancel();
+    setSpeakingId(null);
+  };
+
+  const playTTS = (id: string, text: string) => {
+    if (speakingId === id) {
+      stopTTS();
+      return;
+    }
+    
+    stopTTS(); // Stop any currently playing audio
+
+    // Strip markdown formatting for cleaner reading
+    const cleanText = text
+      .replace(/!\[.*?\]\(.*?\)/g, '') // remove images
+      .replace(/```[\s\S]*?```/g, 'Code block omitted for reading.') // replace code blocks
+      .replace(/[`*#_~>]/g, '') // remove markdown symbols
+      .trim();
+
+    if (!cleanText) return;
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.onend = () => setSpeakingId(null);
+    utterance.onerror = () => setSpeakingId(null);
+    
+    setSpeakingId(id);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  useEffect(() => {
+    // Fetch user location in the background
+    fetch('https://ipapi.co/json/')
+      .then(res => res.json())
+      .then(data => {
+        if (data.city && data.region && data.country_name) {
+          setUserLocation(`${data.city}, ${data.region}, ${data.country_name}`);
+        }
+      })
+      .catch(err => console.error('Failed to fetch location:', err));
+
+    // Initialize Web Speech API
+    // @ts-ignore
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInput((prev) => prev + (prev.trim() ? ' ' : '') + transcript);
+      };
+      
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech recognition error', event.error);
+        setIsRecording(false);
+      };
+      
+      recognitionRef.current.onend = () => {
+        setIsRecording(false);
+      };
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
+  const downloadChat = () => {
+    if (!messages || messages.length === 0) return;
+    
+    let mdContent = `# PAIVA Conversation Export\n\n*Exported on ${new Date().toLocaleString()}*\n\n---\n\n`;
+    
+    messages.forEach(msg => {
+      const role = msg.role === 'user' ? '👤 **You**' : '🤖 **PAIVA**';
+      mdContent += `${role}:\n${msg.content}\n\n`;
+    });
+    
+    const blob = new Blob([mdContent], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `PAIVA_Chat_${new Date().toISOString().slice(0,10)}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const toggleRecording = () => {
+    if (!recognitionRef.current) {
+      alert("Your browser does not support Speech Recognition. Try using Chrome or Edge.");
+      return;
+    }
+    
+    if (isRecording) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+    } else {
+      try {
+        recognitionRef.current.start();
+        setIsRecording(true);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        alert("File size exceeds 10MB limit");
+        return;
+    }
+    
+    setIsUploading(true);
+    
+    // If it's an image, read it as Base64 for the Vision model
+    if (file.type.startsWith('image/') || file.name.match(/\.(svg|cdr|cdt)$/i)) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setAttachedImageBase64(event.target?.result as string);
+        setAttachedFileName(file.name);
+        setIsUploading(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        if (imageInputRef.current) imageInputRef.current.value = '';
+      };
+      reader.onerror = () => {
+        alert("Failed to read image");
+        setIsUploading(false);
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    // Otherwise, use backend Document extraction
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    try {
+        const response = await fetchWithAuth('/api/documents/extract', {
+            method: 'POST',
+            body: formData,
+        });
+        
+        if (!response.ok) throw new Error("Failed to extract text");
+        
+        const data = await response.json();
+        setAttachedDocumentText(data.text);
+        setAttachedFileName(file.name);
+    } catch (err) {
+        console.error("Upload error:", err);
+        alert("Failed to extract text from document");
+    } finally {
+        setIsUploading(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        if (imageInputRef.current) imageInputRef.current.value = '';
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -48,10 +233,19 @@ export default function ChatArea() {
 
     const userMessage = input.trim();
     setInput('');
+    const currentAttachment = attachedDocumentText;
+    const currentImage = attachedImageBase64;
+    const currentUrl = attachedUrl;
+    setAttachedDocumentText(null);
+    setAttachedImageBase64(null);
+    setAttachedFileName(null);
+    setAttachedUrl(null);
+    
+    const finalMessage = currentUrl ? `${userMessage}\n\n[Reference URL: ${currentUrl}]` : userMessage;
     
     // Add user message immediately
     const tempUserId = Date.now().toString();
-    setMessages(prev => [...prev, { id: tempUserId, role: 'user', content: userMessage }]);
+    setMessages(prev => [...prev, { id: tempUserId, role: 'user', content: finalMessage }]);
     setIsTyping(true);
 
     // Prepare assistant message placeholder
@@ -63,8 +257,12 @@ export default function ChatArea() {
 
     await chatService.streamMessage(
       activeConversationId,
-      userMessage,
+      finalMessage,
       contextImageEnabled,
+      aiModel,
+      currentAttachment || undefined,
+      currentImage || undefined,
+      userLocation || undefined,
       (data) => {
         if (data.conversationId) {
           setConversationIdWithoutFetch(data.conversationId);
@@ -126,11 +324,40 @@ export default function ChatArea() {
         <span className="text-sm font-semibold text-muted-foreground tracking-snug">
           PAIVA Assistant
         </span>
-        {/* Status dot */}
-        <span className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
-          <span className="size-2 rounded-full bg-emerald-400 dark:bg-emerald-300 shadow-[0_0_6px_oklch(0.80_0.17_160/0.8)] animate-pulse" />
-          Online
-        </span>
+
+        {/* Model Switcher */}
+        <div className="ml-auto flex items-center gap-2">
+          <button 
+            type="button"
+            onClick={downloadChat}
+            className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded flex items-center gap-1.5 text-xs border border-transparent hover:border-border/50 hover:bg-secondary/40"
+            title="Download Chat as Markdown"
+          >
+            <Download size={14} />
+            <span className="hidden sm:inline">Export</span>
+          </button>
+
+          <select 
+            value={aiModel} 
+            onChange={(e) => setAiModel(e.target.value)}
+            className="ml-4 bg-secondary/40 border border-border/50 text-xs text-muted-foreground rounded-md px-2 py-1 outline-none focus:border-primary/50 cursor-pointer"
+          >
+            <option value="">Auto (Default)</option>
+            <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Smartest)</option>
+            <option value="llama-3.1-8b-instant">Llama 3.1 8B (Fastest)</option>
+            <option value="deepseek-r1-distill-llama-70b">DeepSeek R1 70B (Reasoning)</option>
+            <option value="mixtral-8x7b-32768">Mixtral 8x7B (Balanced)</option>
+            <option value="gemma2-9b-it">Google Gemma 2 9B</option>
+            <option value="qwen-2.5-32b">Qwen 2.5 32B</option>
+            <option value="qwen-2.5-coder-32b">Qwen 2.5 Coder 32B</option>
+          </select>
+
+          {/* Status dot */}
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+            <span className="size-2 rounded-full bg-emerald-400 dark:bg-emerald-300 shadow-[0_0_6px_oklch(0.80_0.17_160/0.8)] animate-pulse" />
+            Online
+          </span>
+        </div>
       </div>
 
       {/* ── Messages ─────────────────────────────────────────────────── */}
@@ -260,6 +487,18 @@ export default function ChatArea() {
                 >
                   {copiedId === msg.id ? <CheckCircle2 size={15} className="text-emerald-500" /> : <Copy size={15} />}
                 </button>
+                <button
+                  onClick={() => playTTS(msg.id, msg.content)}
+                  className={cn(
+                    "p-1.5 rounded-md transition-colors",
+                    speakingId === msg.id 
+                      ? "text-primary bg-primary/10 hover:bg-primary/20" 
+                      : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                  )}
+                  title={speakingId === msg.id ? "Stop reading" : "Read aloud"}
+                >
+                  {speakingId === msg.id ? <VolumeX size={15} /> : <Volume2 size={15} />}
+                </button>
               </div>
             )}
                 </>
@@ -276,6 +515,79 @@ export default function ChatArea() {
         onSubmit={handleSend}
       >
         <div className="relative flex-1">
+          <div className="absolute -top-10 left-0 flex items-center gap-2">
+            {attachedFileName && (
+              <div className="bg-primary/20 text-primary border border-primary/30 px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2">
+                {attachedImageBase64 ? <ImageIcon size={12} /> : <Paperclip size={12} />}
+                {attachedFileName}
+                <button type="button" onClick={() => { setAttachedDocumentText(null); setAttachedImageBase64(null); setAttachedFileName(null); }} className="hover:text-foreground">
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+            {attachedUrl && (
+              <div className="bg-primary/20 text-primary border border-primary/30 px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2">
+                {attachedUrl.includes('youtube.com') || attachedUrl.includes('youtu.be') ? <MonitorPlay size={12} /> : <LinkIcon size={12} />}
+                {attachedUrl.length > 30 ? attachedUrl.substring(0, 30) + '...' : attachedUrl}
+                <button type="button" onClick={() => setAttachedUrl(null)} className="hover:text-foreground">
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+          </div>
+          
+          {showUrlInput && (
+            <div className="absolute -top-16 left-0 bg-background border border-border/50 p-2 rounded-lg shadow-lg flex gap-2 animate-in fade-in slide-in-from-bottom-2 z-10 w-80">
+              <input 
+                ref={urlInputRef}
+                type="url" 
+                placeholder="https://..." 
+                className="flex-1 bg-secondary/50 border-none rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && urlInputRef.current?.value) {
+                    setAttachedUrl(urlInputRef.current.value);
+                    setShowUrlInput(false);
+                  }
+                }}
+                autoFocus
+              />
+              <Button size="sm" onClick={() => {
+                if (urlInputRef.current?.value) {
+                  setAttachedUrl(urlInputRef.current.value);
+                  setShowUrlInput(false);
+                }
+              }}>Add</Button>
+              <Button size="sm" variant="ghost" onClick={() => setShowUrlInput(false)}>Cancel</Button>
+            </div>
+          )}
+
+          {showYoutubeInput && (
+            <div className="absolute -top-16 left-0 bg-background border border-[#ff0000]/50 p-2 rounded-lg shadow-lg flex gap-2 animate-in fade-in slide-in-from-bottom-2 z-10 w-80">
+              <input 
+                ref={youtubeInputRef}
+                type="url" 
+                placeholder="Paste YouTube Link..." 
+                className="flex-1 bg-secondary/50 border-none rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#ff0000]"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && youtubeInputRef.current?.value) {
+                    setAttachedUrl(youtubeInputRef.current.value);
+                    setShowYoutubeInput(false);
+                  }
+                }}
+                autoFocus
+              />
+              <Button size="sm" onClick={() => {
+                if (youtubeInputRef.current?.value) {
+                  setAttachedUrl(youtubeInputRef.current.value);
+                  setShowYoutubeInput(false);
+                }
+              }} className="bg-[#ff0000] hover:bg-[#cc0000] text-white">Add</Button>
+              <Button size="sm" variant="ghost" onClick={() => setShowYoutubeInput(false)}>Cancel</Button>
+            </div>
+          )}
+
+
+
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -295,7 +607,66 @@ export default function ChatArea() {
               'disabled:opacity-50 disabled:cursor-not-allowed'
             )}
           />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv" onChange={handleFileUpload} />
+            <input type="file" ref={imageInputRef} className="hidden" accept="image/*,.svg,.cdr,.cdt" onChange={handleFileUpload} />
+            
+            <button 
+              type="button" 
+              onClick={() => fileInputRef.current?.click()} 
+              className={cn("p-1.5 rounded-lg text-muted-foreground hover:bg-secondary/80 transition-colors group relative", isUploading && "opacity-50 pointer-events-none")}
+            >
+              <Paperclip size={16} className={isUploading ? "animate-bounce" : ""} />
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-full mr-2 whitespace-nowrap bg-popover text-popover-foreground px-2 py-1 rounded text-[11px] shadow-sm border border-border/50 pointer-events-none">
+                Upload Document
+              </span>
+            </button>
+            <button 
+              type="button" 
+              onClick={() => imageInputRef.current?.click()} 
+              className={cn("p-1.5 rounded-lg text-muted-foreground hover:bg-secondary/80 transition-colors group relative", isUploading && "opacity-50 pointer-events-none")}
+            >
+              <ImageIcon size={16} className={isUploading ? "animate-bounce" : ""} />
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-full mr-2 whitespace-nowrap bg-popover text-popover-foreground px-2 py-1 rounded text-[11px] shadow-sm border border-border/50 pointer-events-none">
+                Upload Image
+              </span>
+            </button>
+            <button 
+              type="button" 
+              onClick={() => { setShowUrlInput(!showUrlInput); setShowYoutubeInput(false); }} 
+              className={cn("p-1.5 rounded-lg text-muted-foreground hover:bg-secondary/80 transition-colors group relative", showUrlInput && "bg-secondary/80 text-foreground")}
+            >
+              <LinkIcon size={16} />
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-full mr-2 whitespace-nowrap bg-popover text-popover-foreground px-2 py-1 rounded text-[11px] shadow-sm border border-border/50 pointer-events-none">
+                Attach Link
+              </span>
+            </button>
+            <button 
+              type="button" 
+              onClick={() => { setShowYoutubeInput(!showYoutubeInput); setShowUrlInput(false); }} 
+              className={cn("p-1.5 rounded-lg text-muted-foreground hover:bg-[#ff0000]/10 hover:text-[#ff0000] transition-colors group relative", showYoutubeInput && "bg-[#ff0000]/10 text-[#ff0000]")}
+            >
+              <MonitorPlay size={16} />
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-full mr-2 whitespace-nowrap bg-popover text-popover-foreground px-2 py-1 rounded text-[11px] shadow-sm border border-border/50 pointer-events-none">
+                YouTube Link
+              </span>
+            </button>
+            
+            <button 
+              type="button" 
+              onClick={toggleRecording} 
+              className={cn(
+                "p-1.5 rounded-lg transition-colors group relative", 
+                isRecording ? "bg-red-500/20 text-red-500 hover:bg-red-500/30" : "text-muted-foreground hover:bg-secondary/80"
+              )}
+            >
+              {isRecording ? <Mic className="animate-pulse" size={16} /> : <MicOff size={16} />}
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-full mr-2 whitespace-nowrap bg-popover text-popover-foreground px-2 py-1 rounded text-[11px] shadow-sm border border-border/50 pointer-events-none">
+                {isRecording ? "Stop Recording" : "Voice Typing"}
+              </span>
+            </button>
+            
+            <div className="h-4 w-px bg-border/50 mx-1"></div>
             <label 
               title="Context Image" 
               className="flex items-center gap-1.5 cursor-pointer text-xs font-medium text-muted-foreground hover:text-foreground transition-colors group px-2 py-1.5 rounded-lg hover:bg-secondary/80"
