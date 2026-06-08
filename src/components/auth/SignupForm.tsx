@@ -7,6 +7,7 @@ import Input from '../Input';
 import PasswordStrengthMeter from '../PasswordStrengthMeter';
 import { Button } from '../ui/Button';
 import { signup } from '../../services/auth';
+import { ArrowRight } from 'lucide-react';
 
 const signupSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.').max(50, 'Name is too long.'),
@@ -98,8 +99,9 @@ export default function SignupForm({ onToggleMode, onSuccess }: SignupFormProps)
       />
 
       <div className="flex flex-col gap-4 mt-2">
-        <Button variant="primary" size="lg" type="submit" isLoading={isBusy} className="w-full">
+        <Button variant="glow" size="lg" type="submit" isLoading={isBusy} className="w-full gap-2.5">
           Sign up
+          {!isBusy && <ArrowRight size={17} strokeWidth={2} className="transition-transform duration-200 group-hover:translate-x-0.5" />}
         </Button>
         <Button variant="ghost" size="md" type="button" onClick={onToggleMode} className="w-full">
           Sign in instead

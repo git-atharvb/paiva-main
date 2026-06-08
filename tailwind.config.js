@@ -32,10 +32,19 @@ export default {
           DEFAULT:    'var(--color-destructive)',
           foreground: 'var(--color-destructive-foreground)',
         },
+        success: {
+          DEFAULT:    'var(--color-success)',
+          foreground: 'var(--color-success-foreground)',
+        },
+        warning: {
+          DEFAULT:    'var(--color-warning)',
+          foreground: 'var(--color-warning-foreground)',
+        },
         accent: {
           DEFAULT:    'var(--color-accent)',
           foreground: 'var(--color-accent-foreground)',
         },
+        'surface-elevated': 'var(--color-surface-elevated)',
         border: 'var(--color-border)',
         input:  'var(--color-input)',
         ring:   'var(--color-ring)',
@@ -72,9 +81,12 @@ export default {
         'shimmer':     'shimmer     2.4s linear        infinite',
         'pulse-glow':  'pulse-glow  3s   ease-in-out   infinite',
         'float':       'float       6s   ease-in-out   infinite',
+        'slide-up':    'slide-up    0.4s cubic-bezier(0.22,1,0.36,1) both',
+        'fade-scale':  'fade-scale  0.35s cubic-bezier(0.22,1,0.36,1) both',
+        'mesh-drift':  'mesh-drift  25s  ease-in-out   infinite',
       },
 
-      // ── Keyframes (mirrors @theme block in index.css) ─────────────────────
+      // ── Keyframes ─────────────────────────────────────────────────────────
       keyframes: {
         'gradient-x': {
           '0%, 100%': { 'background-size': '220% 220%', 'background-position': 'left center'  },
@@ -98,6 +110,18 @@ export default {
         'float': {
           '0%, 100%': { transform: 'translateY(0px)'  },
           '50%':       { transform: 'translateY(-6px)' },
+        },
+        'slide-up': {
+          from: { opacity: '0', transform: 'translateY(12px) scale(0.98)' },
+          to:   { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+        'fade-scale': {
+          from: { opacity: '0', transform: 'scale(0.95)' },
+          to:   { opacity: '1', transform: 'scale(1)' },
+        },
+        'mesh-drift': {
+          '0%, 100%': { 'background-position': '0% 50%' },
+          '50%':       { 'background-position': '100% 50%' },
         },
       },
 

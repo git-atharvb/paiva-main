@@ -9,15 +9,12 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ header, sidebar, children }: DashboardLayoutProps) {
   return (
-    <div className="flex h-dvh w-full overflow-hidden transition-colors duration-700 bg-background bg-aurora relative">
+    <div className="flex h-dvh w-full overflow-hidden transition-colors duration-700 bg-background bg-mesh bg-aurora relative">
 
-      {/* ── Subtle dot-grid overlay ─────────────────────────────────── */}
+      {/* ── Floating ambient orb ────────────────────────────────────── */}
       <div
-        className="absolute inset-0 pointer-events-none z-0 mix-blend-overlay opacity-50"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ccircle cx='1' cy='1' r='1' fill='oklch(0.5 0 0 / 0.15)'/%3E%3C/svg%3E")`,
-          backgroundSize: '20px 20px',
-        }}
+        className="absolute top-1/3 right-1/4 w-[450px] h-[450px] rounded-full pointer-events-none z-0 opacity-20 blur-3xl animate-spotlight"
+        style={{ background: 'radial-gradient(circle, oklch(0.56 0.260 280 / 0.25), transparent 70%)' }}
       />
 
       {/* ── Floating Sidebar (bento box) ─────────────────────────────── */}
@@ -27,7 +24,7 @@ export function DashboardLayout({ header, sidebar, children }: DashboardLayoutPr
             'w-full h-full rounded-3xl overflow-hidden',
             'glass-surface bg-noise',
             'transition-all duration-500 ease-smooth',
-            'hover:border-primary/30',
+            'hover:border-primary/25',
           )}
         >
           {sidebar}
@@ -40,24 +37,25 @@ export function DashboardLayout({ header, sidebar, children }: DashboardLayoutPr
         {/* ── Floating Header ─────────────────────────────────────────── */}
         <header
           className={cn(
-            'h-[68px] shrink-0 mb-4 px-6 flex items-center justify-between',
-            'rounded-3xl',
+            'h-[64px] shrink-0 mb-3 px-6 flex items-center justify-between',
+            'rounded-2xl',
             'glass-surface bg-noise',
             'transition-all duration-500 ease-smooth',
-            'hover:border-primary/25',
+            'hover:border-primary/20',
           )}
         >
           {header}
         </header>
 
+        {/* ── Gradient divider line ──────────────────────────────────── */}
+        <div className="h-px mb-3 mx-4 bg-gradient-to-r from-transparent via-border/50 to-transparent" />
+
         {/* ── Main Content ────────────────────────────────────────────── */}
         <main
           className={cn(
-            'flex-1 overflow-hidden rounded-3xl',
+            'flex-1 overflow-hidden rounded-2xl',
             // Lighter glass for main — more translucent so chat bubbles pop
-            'bg-card/35 dark:bg-card/45 backdrop-blur-2xl',
-            'border border-border/40 dark:border-border/30',
-            'shadow-1 dark:shadow-2',
+            'glass-surface-subtle bg-noise',
             'transition-all duration-500 ease-smooth',
           )}
         >

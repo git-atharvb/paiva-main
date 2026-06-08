@@ -39,11 +39,14 @@ export default function Sidebar() {
   return (
     <aside className="w-full h-full flex flex-col p-5 text-foreground bg-transparent">
 
+      {/* ── Top gradient accent line ──────────────────────────────── */}
+      <div className="h-[2px] -mt-5 mb-5 -mx-5 bg-gradient-to-r from-transparent via-primary/40 to-transparent rounded-full" />
+
       {/* ── Logo / Brand ─────────────────────────────────────────── */}
       <div className="flex items-center gap-3.5 mb-8 px-1.5 animate-in fade-in slide-in-from-left-4 duration-500">
         <div className="relative size-11 shrink-0 group cursor-default">
           {/* Glow halo behind logo */}
-          <div className="absolute inset-0 bg-primary/40 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none animate-pulse-glow" />
+          <div className="absolute inset-0 bg-primary/35 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none animate-pulse-glow" />
           <img
             src={paivaLogo}
             alt="Paiva Logo"
@@ -63,11 +66,13 @@ export default function Sidebar() {
         onClick={() => setActiveConversationId(null)}
         className={cn(
           'mb-6 w-full flex items-center gap-2.5 px-4 py-3 rounded-xl',
-          'bg-primary/10 dark:bg-primary/15',
-          'border border-primary/25 dark:border-primary/30',
+          'bg-gradient-to-r from-primary/12 to-primary/6',
+          'dark:from-primary/18 dark:to-primary/8',
+          'border border-primary/20 dark:border-primary/25',
           'text-primary text-sm font-semibold tracking-snug',
-          'hover:bg-primary/18 dark:hover:bg-primary/22',
-          'hover:border-primary/50',
+          'hover:from-primary/18 hover:to-primary/10',
+          'dark:hover:from-primary/25 dark:hover:to-primary/14',
+          'hover:border-primary/40',
           'hover:shadow-neon-sm',
           'transition-all duration-200 ease-spring',
           'hover:scale-[1.02] hover:-translate-y-px',
@@ -76,34 +81,34 @@ export default function Sidebar() {
           'animate-in fade-in slide-in-from-left-4 duration-500 delay-75',
         )}
       >
-        <Plus size={16} strokeWidth={2.5} className="shrink-0" />
+        <Plus size={16} strokeWidth={2.5} className="shrink-0 transition-transform duration-200 group-hover:rotate-90" />
         New Conversation
       </button>
 
       {/* ── Conversations label ───────────────────────────────────── */}
-      <div className="text-label text-muted-foreground/70 mb-3 px-2 animate-in fade-in duration-500 delay-100">
+      <div className="text-label text-muted-foreground/60 mb-3 px-2 animate-in fade-in duration-500 delay-100">
         Recent
       </div>
 
-      {/* ── Conversation list ─────────────────────────────────────── */}
-      <nav className="flex-1 space-y-1 overflow-y-auto pr-1 -mr-1">
+      {/* ── Conversation list with scroll mask ─────────────────────── */}
+      <nav className="flex-1 space-y-1 overflow-y-auto pr-1 -mr-1 scroll-mask-bottom">
         {conversations.map((c, i) => (
           <div
             key={c.id}
             onClick={() => setActiveConversationId(c.id)}
             className={cn(
-              'group relative px-3.5 py-3 rounded-xl cursor-pointer',
+              'group relative px-3.5 py-2.5 rounded-xl cursor-pointer',
               'flex items-center gap-3',
               'text-sm font-medium tracking-snug',
               'transition-all duration-200 ease-spring',
-              'hover:scale-[1.015] hover:-translate-y-px',
+              'hover:scale-[1.01] hover:-translate-y-px',
               'active:scale-[0.98] active:transition-none',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               'animate-in fade-in slide-in-from-left-4',
               // Active state
               activeConversationId === c.id
-                ? 'bg-primary/12 dark:bg-primary/18 text-primary border border-primary/25 dark:border-primary/30 shadow-neon-sm'
-                : 'text-foreground hover:bg-secondary/55 hover:text-primary border border-transparent hover:border-border/50',
+                ? 'bg-primary/10 dark:bg-primary/15 text-primary border border-primary/20 dark:border-primary/25 shadow-neon-sm'
+                : 'text-foreground hover:bg-secondary/45 hover:text-primary border border-transparent hover:border-border/40',
             )}
             style={{ animationDelay: `${(i + 2) * 80}ms`, animationFillMode: 'both' }}
             role="button"
@@ -118,13 +123,13 @@ export default function Sidebar() {
               <form onSubmit={submitRename} className="flex-1 flex items-center gap-1">
                 <input 
                   autoFocus
-                  className="flex-1 bg-background text-foreground text-sm rounded px-1 outline-none border border-primary"
+                  className="flex-1 bg-background text-foreground text-sm rounded px-1.5 py-0.5 outline-none border border-primary/50 focus:border-primary"
                   value={renameValue}
                   onChange={(e) => setRenameValue(e.target.value)}
                   onClick={(e) => e.stopPropagation()}
                 />
-                <button type="submit" className="p-1 hover:text-primary"><Check size={14} /></button>
-                <button type="button" onClick={(e) => { e.stopPropagation(); setRenamingId(null); }} className="p-1 hover:text-destructive"><XIcon size={14} /></button>
+                <button type="submit" className="p-1 hover:text-primary transition-colors"><Check size={14} /></button>
+                <button type="button" onClick={(e) => { e.stopPropagation(); setRenamingId(null); }} className="p-1 hover:text-destructive transition-colors"><XIcon size={14} /></button>
               </form>
             ) : (
               <>
@@ -148,15 +153,16 @@ export default function Sidebar() {
         <div
           className={cn(
             'p-4 rounded-2xl',
-            'bg-secondary/30 dark:bg-secondary/50',
-            'border border-border/50 dark:border-border/40',
+            'bg-secondary/25 dark:bg-secondary/40',
+            'border border-border/40 dark:border-border/30',
             'shadow-1',
             'transition-all duration-300 ease-smooth',
-            'hover:shadow-2 hover:border-primary/25',
+            'hover:shadow-2 hover:border-primary/20',
+            'group',
           )}
         >
           <div className="text-sm font-semibold mb-0.5 flex items-center gap-2 tracking-tight">
-            <Settings size={15} strokeWidth={1.75} className="text-primary" />
+            <Settings size={15} strokeWidth={1.75} className="text-primary transition-transform duration-500 group-hover:rotate-90" />
             Settings
           </div>
           <div className="text-caption text-muted-foreground mb-4 leading-relaxed">
@@ -166,8 +172,8 @@ export default function Sidebar() {
             onClick={() => setIsSettingsOpen(true)}
             className={cn(
               'w-full py-2.5 rounded-xl text-xs font-bold tracking-wider',
-              'bg-foreground/90 text-background',
-              'dark:bg-white/10 dark:text-foreground dark:border dark:border-white/10',
+              'bg-foreground/85 text-background',
+              'dark:bg-white/8 dark:text-foreground dark:border dark:border-white/8',
               'hover:bg-primary hover:text-primary-foreground',
               'hover:shadow-neon-sm',
               'transition-all duration-200 ease-spring',

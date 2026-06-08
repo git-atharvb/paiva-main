@@ -2,7 +2,7 @@ import { type ButtonHTMLAttributes, forwardRef } from 'react';
 import { cn } from '../../lib/utils';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline' | 'glow';
   size?: 'sm' | 'md' | 'lg' | 'icon';
   isLoading?: boolean;
 }
@@ -12,18 +12,18 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const variants = {
       /**
        * PRIMARY — violet gradient with neon glow.
-       * Hover: scale up + intensify glow (spring easing via .interactive).
+       * Hover: scale up + intensify glow (spring easing).
        * Active: snap back with ease timing.
        */
       primary: [
         'bg-primary text-primary-foreground',
         'shadow-neon-sm hover:shadow-neon',
-        'hover:brightness-[1.12]',
+        'hover:brightness-[1.10]',
         'relative overflow-hidden',
-        // Sheen sweep on hover
-        'after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/20 after:to-transparent',
+        // Subtle sheen sweep on hover
+        'after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/15 after:to-transparent',
         'after:translate-x-[-150%] after:skew-x-[-20deg]',
-        'hover:after:translate-x-[150%] after:transition-transform after:duration-500',
+        'hover:after:translate-x-[150%] after:transition-transform after:duration-700 after:ease-out',
       ].join(' '),
 
       /**
@@ -35,7 +35,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         'border border-border/60',
         'backdrop-blur-sm',
         'shadow-1',
-        'hover:bg-secondary/70 hover:border-primary/40 hover:shadow-2',
+        'hover:bg-secondary/70 hover:border-primary/30 hover:shadow-2',
       ].join(' '),
 
       /**
@@ -55,6 +55,29 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         'bg-destructive text-destructive-foreground',
         'shadow-1 hover:brightness-[1.10] hover:shadow-2',
       ].join(' '),
+
+      /**
+       * OUTLINE — bordered with transparent background.
+       */
+      outline: [
+        'bg-transparent text-foreground',
+        'border border-border/70',
+        'hover:bg-secondary/30 hover:border-primary/40',
+        'hover:shadow-1',
+      ].join(' '),
+
+      /**
+       * GLOW — CTA button with animated neon border glow.
+       */
+      glow: [
+        'bg-primary text-primary-foreground',
+        'shadow-neon hover:shadow-[0_0_20px_oklch(from_var(--color-ring)_l_c_h/0.55),0_0_48px_oklch(from_var(--color-ring)_l_c_h/0.28)]',
+        'hover:brightness-[1.12]',
+        'relative overflow-hidden',
+        'after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/12 after:to-transparent',
+        'after:translate-x-[-150%] after:skew-x-[-20deg]',
+        'hover:after:translate-x-[150%] after:transition-transform after:duration-700 after:ease-out',
+      ].join(' '),
     };
 
     const sizes = {
@@ -73,15 +96,15 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           'inline-flex items-center justify-center rounded-xl',
           // ── Spring-physics motion (transform + shadow + border) ──────
           'transition-all duration-200 ease-spring',
-          'hover:scale-[1.035] hover:-translate-y-px',
+          'hover:scale-[1.03] hover:-translate-y-px',
           'active:scale-[0.96] active:translate-y-0 active:transition-none',
           // ── Accessibility — theme-aware focus ring ───────────────────
           'focus-visible:outline-none',
           'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
           'focus-visible:ring-offset-background',
-          'focus-visible:shadow-[0_0_0_4px_oklch(from_var(--color-ring)_l_c_h_/_0.20)]',
+          'focus-visible:shadow-[0_0_0_4px_oklch(from_var(--color-ring)_l_c_h_/_0.18)]',
           // ── Disabled state ───────────────────────────────────────────
-          'disabled:opacity-45 disabled:pointer-events-none disabled:shadow-none',
+          'disabled:opacity-40 disabled:pointer-events-none disabled:shadow-none',
           // ── Selected variant & size ──────────────────────────────────
           variants[variant],
           sizes[size],

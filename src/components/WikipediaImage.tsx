@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Image as ImageIcon, Download } from 'lucide-react';
+import { Image as ImageIcon, Download, X as XIcon } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { fetchWithAuth } from '../services/api';
 
@@ -60,7 +60,11 @@ function ImageItem({
   return (
     <figure 
       onClick={() => onExpand(url)}
-      className={cn("overflow-hidden rounded-xl border border-border/50 shadow-md bg-black/5 dark:bg-black/20 group relative flex items-center justify-center cursor-zoom-in shrink-0 min-h-0 min-w-0", className)}
+      className={cn(
+        "overflow-hidden rounded-xl border border-border/40 bg-muted/30 dark:bg-black/20 group relative flex items-center justify-center cursor-zoom-in shrink-0 min-h-0 min-w-0",
+        "shadow-1 hover:shadow-2 transition-shadow duration-300",
+        className
+      )}
       style={style}
     >
       <img
@@ -72,20 +76,20 @@ function ImageItem({
           isSingle ? "object-contain" : "object-cover"
         )}
       />
-      <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       
       {/* Top right actions (Download) */}
       <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex gap-2">
         <button
           onClick={handleDownload}
-          className="p-2 rounded-lg bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm transition-colors border border-white/10 shadow-sm"
+          className="p-2 rounded-lg bg-black/45 hover:bg-black/65 text-white backdrop-blur-sm transition-colors border border-white/10 shadow-sm"
           title="Download Image"
         >
           <Download size={16} />
         </button>
       </div>
 
-      <figcaption className="absolute bottom-0 left-0 right-0 p-3 text-xs text-white/90 font-medium tracking-snug truncate opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+      <figcaption className="absolute bottom-0 left-0 right-0 p-3 text-xs text-white/85 font-medium tracking-snug truncate opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none backdrop-blur-sm bg-black/20">
         {alt}
       </figcaption>
     </figure>
@@ -169,8 +173,8 @@ export default function WikipediaImage({ matches, className }: WikipediaImagePro
 
   if (loading) {
     return (
-      <div className={cn("w-[400px] shrink-0 animate-pulse bg-muted rounded-xl border border-border/50 flex items-center justify-center my-4 shadow-sm max-w-[85vw]", className)} style={{ minHeight: '300px' }}>
-        <ImageIcon className="text-muted-foreground/30" size={32} />
+      <div className={cn("w-[400px] shrink-0 rounded-xl border border-border/40 flex items-center justify-center my-4 max-w-[85vw] skeleton-shimmer", className)} style={{ minHeight: '300px' }}>
+        <ImageIcon className="text-muted-foreground/20" size={36} />
       </div>
     );
   }
@@ -247,23 +251,40 @@ export default function WikipediaImage({ matches, className }: WikipediaImagePro
       {/* Lightbox Overlay */}
       {maximizedItem && createPortal(
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 cursor-zoom-out p-4 md:p-10"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/82 backdrop-blur-md animate-in fade-in duration-300 cursor-zoom-out p-4 md:p-10"
           onClick={() => setMaximizedItem(null)}
         >
           <img
             src={maximizedItem.url}
             alt={maximizedItem.alt}
-            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200"
+            className="max-w-full max-h-full object-contain rounded-xl shadow-3 animate-in zoom-in-95 fade-in duration-300"
             onClick={(e) => e.stopPropagation()} // Prevent click on image from closing
           />
           
+          {/* Close button */}
+          <button
+            onClick={() => setMaximizedItem(null)}
+            className="absolute top-6 left-6 p-2.5 rounded-full bg-black/45 hover:bg-black/65 text-white backdrop-blur-sm transition-colors border border-white/15 shadow-lg cursor-pointer"
+            title="Close"
+          >
+            <XIcon size={18} />
+          </button>
+
+          {/* Download button */}
           <button
             onClick={handleDownloadMaximized}
-            className="absolute top-6 right-6 p-3 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm transition-colors border border-white/20 shadow-lg cursor-pointer"
+            className="absolute top-6 right-6 p-2.5 rounded-full bg-black/45 hover:bg-black/65 text-white backdrop-blur-sm transition-colors border border-white/15 shadow-lg cursor-pointer"
             title="Download Image"
           >
-            <Download size={20} />
+            <Download size={18} />
           </button>
+
+          {/* Caption */}
+          {maximizedItem.alt && (
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-5 py-2 rounded-full bg-black/50 backdrop-blur-sm text-white/85 text-sm font-medium border border-white/10 max-w-md truncate">
+              {maximizedItem.alt}
+            </div>
+          )}
         </div>,
         document.body
       )}

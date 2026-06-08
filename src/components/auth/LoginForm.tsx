@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import type { CredentialResponse } from '@react-oauth/google';
 import { useTheme } from '../../context/ThemeContext';
+import { ArrowRight } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address.'),
@@ -75,6 +76,8 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
     }
   };
 
+  const isDark = theme === 'dark' || theme === 'cyberpunk' || theme === 'midnight';
+
   return (
     <form className="flex flex-col gap-5 animate-in fade-in slide-in-from-bottom-4 duration-500" onSubmit={handleSubmit(onSubmit)}>
       <Input
@@ -100,16 +103,18 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
       </div>
 
       <div className="flex flex-col gap-4 mt-1">
-        <Button variant="primary" size="lg" type="submit" isLoading={isBusy} className="w-full">
+        <Button variant="glow" size="lg" type="submit" isLoading={isBusy} className="w-full gap-2.5">
           Sign in
+          {!isBusy && <ArrowRight size={17} strokeWidth={2} className="transition-transform duration-200 group-hover:translate-x-0.5" />}
         </Button>
         
+        {/* Divider */}
         <div className="flex items-center gap-3 my-4">
-          <div className="flex-1 h-px bg-linear-to-r from-transparent to-border" />
-          <span className="text-xs uppercase text-muted-foreground/70 font-semibold tracking-widest">
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+          <span className="text-xs uppercase text-muted-foreground/60 font-semibold tracking-widest">
             Or continue with
           </span>
-          <div className="flex-1 h-px bg-linear-to-l from-transparent to-border" />
+          <div className="flex-1 h-px bg-gradient-to-l from-transparent via-border to-transparent" />
         </div>
 
         <div className="flex justify-center w-full transform transition-transform duration-300 hover:scale-[1.02]">
@@ -117,7 +122,7 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
             onSuccess={handleGoogleSuccess}
             onError={handleGoogleError}
             useOneTap
-            theme={theme === 'dark' ? 'filled_blue' : 'outline'}
+            theme={isDark ? 'filled_blue' : 'outline'}
             shape="pill"
           />
         </div>

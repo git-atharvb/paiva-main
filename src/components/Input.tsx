@@ -25,22 +25,24 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               // ── Base layout ─────────────────────────────────────────
               'peer w-full h-14 px-4 pt-5 pb-2 rounded-xl',
               'text-foreground text-sm font-medium tracking-snug',
-              // ── Surface ──────────────────────────────────────────────
-              'bg-input/40 dark:bg-input/60',
+              // ── Frosted surface ──────────────────────────────────────
+              'frosted-input',
               // ── Border — bottom-ruled style with full border on focus ─
-              'border-b-2 border-border/60',
+              'border-b-2 border-border/50',
               'outline-none',
               // ── Smooth transitions ────────────────────────────────────
               'transition-all duration-250 ease-smooth',
-              // ── Focus state — themed ring ─────────────────────────────
+              // ── Hover state — subtle brightness shift before focus ────
+              'hover:brightness-[1.02]',
+              // ── Focus state — themed ring with inner radial glow ──────
               'focus:border-primary focus:bg-input/20 dark:focus:bg-input/40',
-              'focus:shadow-[0_0_0_3px_oklch(from_var(--color-ring)_l_c_h/0.18)]',
+              'focus:shadow-[0_0_0_3px_oklch(from_var(--color-ring)_l_c_h/0.15),inset_0_-16px_32px_oklch(from_var(--color-ring)_l_c_h/0.04)]',
               // ── Placeholder (hidden — label acts as placeholder) ──────
               'placeholder-transparent',
               // ── Password right padding ────────────────────────────────
               isPassword && 'pr-12',
               // ── Error state ───────────────────────────────────────────
-              error && 'border-destructive focus:border-destructive focus:shadow-[0_0_0_3px_oklch(from_var(--color-destructive)_l_c_h/0.18)]',
+              error && 'border-destructive focus:border-destructive focus:shadow-[0_0_0_3px_oklch(from_var(--color-destructive)_l_c_h/0.15),inset_0_-16px_32px_oklch(from_var(--color-destructive)_l_c_h/0.04)]',
               className
             )}
             placeholder={label}
@@ -56,11 +58,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               'text-muted-foreground font-medium',
               // ── Default position (placeholder acting) ────────────────
               'top-4 text-sm tracking-snug',
-              // ── Spring-like movement on float ─────────────────────────
+              // ── Spring-like movement + scale on float ────────────────
               'transition-all duration-200 ease-spring',
               // ── Float up when focused or filled ───────────────────────
-              'peer-focus:top-2 peer-focus:text-[0.6875rem] peer-focus:tracking-wider peer-focus:font-bold peer-focus:text-primary',
-              'peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:text-[0.6875rem] peer-[:not(:placeholder-shown)]:tracking-wider peer-[:not(:placeholder-shown)]:font-bold',
+              'peer-focus:top-2 peer-focus:text-[0.6875rem] peer-focus:tracking-wider peer-focus:font-bold peer-focus:text-primary peer-focus:scale-[0.92] peer-focus:origin-left',
+              'peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:text-[0.6875rem] peer-[:not(:placeholder-shown)]:tracking-wider peer-[:not(:placeholder-shown)]:font-bold peer-[:not(:placeholder-shown)]:scale-[0.92] peer-[:not(:placeholder-shown)]:origin-left',
               // ── Error label colour ────────────────────────────────────
               error && 'text-destructive peer-focus:text-destructive',
             )}

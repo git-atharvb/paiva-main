@@ -13,10 +13,14 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
    * glass — lighter surface-level glass panel (sidebar, header)
    */
   glass?: boolean;
+  /**
+   * interactive — adds hover tilt/lift effect
+   */
+  interactive?: boolean;
 }
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, elevated, glass, ...props }, ref) => {
+  ({ className, elevated, glass, interactive, ...props }, ref) => {
     return (
       <div
         ref={ref}
@@ -30,7 +34,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
           !elevated && !glass && [
             'bg-card/80 border border-border/50',
             'shadow-1',
-            'hover:shadow-2 hover:border-primary/20',
+            'hover:shadow-2 hover:border-primary/15',
           ],
 
           // ── Glass surface (sidebar, panels) ───────────────────────────
@@ -41,17 +45,25 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
           // ── Elevated card (auth card, modal) ──────────────────────────
           elevated && [
             // Light: warm white glass
-            'bg-white/72 backdrop-blur-[36px] saturate-150 brightness-105',
-            'border border-white/55',
+            'bg-white/68 backdrop-blur-[36px] saturate-150 brightness-105',
+            'border border-white/50',
             'shadow-premium',
             // Bright inner-top highlight (light) + soft bottom darkening
-            '[box-shadow:var(--shadow-premium),inset_0_1px_0_oklch(1_0_0_/_0.82),inset_0_-1px_0_oklch(0_0_0_/_0.04)]',
+            '[box-shadow:var(--shadow-premium),inset_0_1px_0_oklch(1_0_0_/_0.78),inset_0_-1px_0_oklch(0_0_0_/_0.03)]',
             // Dark: obsidian glass + neon ring
-            'dark:bg-[oklch(0.148_0.022_258_/_0.92)] dark:backdrop-blur-[36px]',
-            'dark:border-[oklch(0.245_0.028_260_/_0.65)]',
+            'dark:bg-[oklch(0.130_0.024_262_/_0.90)] dark:backdrop-blur-[36px]',
+            'dark:border-[oklch(0.230_0.026_262_/_0.60)]',
             'dark:[box-shadow:var(--shadow-premium-dark)]',
             // Noise texture for tactile depth
             'bg-noise',
+          ],
+
+          // ── Interactive variant ────────────────────────────────────────
+          interactive && [
+            'hover:scale-[1.01] hover:-translate-y-0.5',
+            'active:scale-[0.99] active:transition-none',
+            'cursor-pointer',
+            'magical-border',
           ],
 
           className

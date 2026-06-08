@@ -27,29 +27,32 @@ function App() {
   }
 
   return (
-    <div className="w-full min-h-dvh flex items-center justify-center p-6 relative overflow-hidden transition-colors duration-700 bg-background bg-aurora">
+    <div className="w-full min-h-dvh flex items-center justify-center p-6 relative overflow-hidden transition-colors duration-700 bg-background bg-mesh bg-aurora">
 
-      {/* ── Dot grid overlay ──────────────────────────────────────────── */}
-      <div
-        className="absolute inset-0 pointer-events-none z-0 mix-blend-overlay opacity-40"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ccircle cx='1' cy='1' r='1' fill='oklch(0.5 0 0 / 0.2)'/%3E%3C/svg%3E")`,
-          backgroundSize: '20px 20px',
-        }}
+      {/* ── Floating ambient orbs ──────────────────────────────────── */}
+      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full pointer-events-none z-0 opacity-30 blur-3xl animate-spotlight"
+        style={{ background: 'radial-gradient(circle, oklch(0.56 0.260 280 / 0.3), transparent 70%)' }}
+      />
+      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full pointer-events-none z-0 opacity-20 blur-3xl animate-spotlight"
+        style={{ background: 'radial-gradient(circle, oklch(0.60 0.220 240 / 0.25), transparent 70%)', animationDelay: '2.5s' }}
       />
 
-      {/* ── Toast notifications ───────────────────────────────────────── */}
+      {/* ── Toast notifications ───────────────────────────────────── */}
       <Toaster
         position="top-right"
         toastOptions={{
           style: {
-            background:   theme === 'dark' ? 'oklch(0.190 0.028 260)' : 'oklch(0.99 0.002 252)',
-            color:        theme === 'dark' ? 'oklch(0.970 0.006 252)' : 'oklch(0.142 0.022 252)',
+            background:   theme === 'dark' || theme === 'cyberpunk' || theme === 'midnight'
+              ? 'oklch(0.175 0.028 262)'
+              : 'oklch(0.992 0.002 264)',
+            color:        theme === 'dark' || theme === 'cyberpunk' || theme === 'midnight'
+              ? 'oklch(0.960 0.005 264)'
+              : 'oklch(0.145 0.024 264)',
             borderRadius: '14px',
-            border:       theme === 'dark'
-              ? '1px solid oklch(0.245 0.028 260 / 0.7)'
-              : '1px solid oklch(0.88 0.012 252 / 0.6)',
-            boxShadow:    theme === 'dark'
+            border:       theme === 'dark' || theme === 'cyberpunk' || theme === 'midnight'
+              ? '1px solid oklch(0.230 0.026 262 / 0.6)'
+              : '1px solid oklch(0.90 0.010 264 / 0.5)',
+            boxShadow:    theme === 'dark' || theme === 'cyberpunk' || theme === 'midnight'
               ? 'var(--shadow-premium-dark)'
               : 'var(--shadow-2)',
             fontSize:     '0.875rem',
@@ -59,21 +62,21 @@ function App() {
         }}
       />
 
-      {/* ── Theme toggle ──────────────────────────────────────────────── */}
+      {/* ── Theme toggle ──────────────────────────────────────────── */}
       <button
         className={cn(
           'absolute top-6 right-6 z-50',
           'size-12 flex items-center justify-center',
           'rounded-full',
-          // Light: frosted glass
-          'bg-white/60 dark:bg-white/8',
+          // Frosted glass
+          'bg-white/55 dark:bg-white/8',
           'backdrop-blur-2xl',
-          'border border-black/10 dark:border-white/12',
+          'border border-black/8 dark:border-white/10',
           'shadow-2 dark:shadow-premium-dark',
           // Spring interaction
           'transition-all duration-300 ease-spring',
           'hover:scale-110 hover:-translate-y-0.5',
-          'hover:shadow-neon-sm hover:border-primary/50',
+          'hover:shadow-neon-sm hover:border-primary/40',
           'active:scale-95 active:transition-none',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         )}
@@ -83,7 +86,9 @@ function App() {
         <div
           className={cn(
             'transition-all duration-500 ease-spring',
-            theme === 'dark' ? 'rotate-180 scale-110' : 'rotate-0 scale-100',
+            theme === 'dark' || theme === 'cyberpunk' || theme === 'midnight'
+              ? 'rotate-180 scale-110'
+              : 'rotate-0 scale-100',
           )}
         >
           {theme === 'light'
@@ -93,17 +98,17 @@ function App() {
         </div>
       </button>
 
-      {/* ── Auth card ────────────────────────────────────────────────── */}
+      {/* ── Auth card ────────────────────────────────────────────── */}
       <div className="flex w-full justify-center relative z-10 animate-in fade-in zoom-in-95 duration-1000 ease-out">
         <AuthCard>
           {/* Logo */}
           <div className="flex justify-center mb-8 w-full animate-in fade-in zoom-in-75 duration-700 delay-100">
             <div className="relative size-24 md:size-28 group cursor-default">
-              <div className="absolute inset-0 bg-primary/35 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none animate-pulse-glow" />
+              <div className="absolute inset-0 bg-primary/30 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none animate-pulse-glow" />
               <img
                 src={paivaLogo}
                 alt="Paiva Logo"
-                className="w-full h-full object-contain rounded-3xl drop-shadow-2xl relative z-10 transition-all duration-700 ease-spring group-hover:scale-110 group-hover:drop-shadow-[0_20px_40px_oklch(0.58_0.255_283/0.4)] outline-none border-none ring-0 animate-float"
+                className="w-full h-full object-contain rounded-3xl drop-shadow-2xl relative z-10 transition-all duration-700 ease-spring group-hover:scale-110 group-hover:drop-shadow-[0_20px_40px_oklch(from_var(--color-ring)_l_c_h/0.35)] outline-none border-none ring-0 animate-float"
               />
             </div>
           </div>
@@ -115,7 +120,7 @@ function App() {
           </h1>
 
           {/* Subtitle */}
-          <p className="text-muted-foreground mb-9 text-base text-center leading-relaxed tracking-snug animate-in fade-in slide-in-from-bottom-3 duration-500 delay-200">
+          <p className="text-gradient-accent mb-9 text-base text-center leading-relaxed tracking-snug font-medium animate-in fade-in slide-in-from-bottom-3 duration-500 delay-200">
             {activeDescription}
           </p>
 
