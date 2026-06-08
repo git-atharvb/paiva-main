@@ -7,6 +7,33 @@ import ChatArea from './components/ChatArea'
 import { DashboardLayout } from './components/layout/DashboardLayout'
 import { ChatProvider } from './context/ChatContext'
 
+import { useChat } from './context/ChatContext'
+
+function DashboardContent({ user, handleLogout }: { user: { name?: string } | null, handleLogout: () => void }) {
+  const { secondaryConversationId } = useChat();
+
+  return (
+    <DashboardLayout
+      header={<Header userName={user?.name} onLogout={handleLogout} />}
+      sidebar={<Sidebar />}
+    >
+      {secondaryConversationId ? (
+        <div className="flex w-full h-full gap-4">
+          <div className="flex-1 min-w-0">
+            <ChatArea />
+          </div>
+          <div className="w-px bg-border/40 shrink-0 hidden md:block" />
+          <div className="flex-1 min-w-0 hidden md:block">
+            <ChatArea isSecondary={true} />
+          </div>
+        </div>
+      ) : (
+        <ChatArea />
+      )}
+    </DashboardLayout>
+  );
+}
+
 export default function Dashboard() {
   const navigate = useNavigate()
   const [user] = useState<{ name?: string; email?: string } | null>(() => {
@@ -34,12 +61,7 @@ export default function Dashboard() {
 
   return (
     <ChatProvider>
-      <DashboardLayout
-        header={<Header userName={user?.name} onLogout={handleLogout} />}
-        sidebar={<Sidebar />}
-      >
-        <ChatArea />
-      </DashboardLayout>
+      <DashboardContent user={user} handleLogout={handleLogout} />
     </ChatProvider>
   )
 }

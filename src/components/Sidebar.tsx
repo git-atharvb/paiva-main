@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MessageSquare, Settings, Plus, Trash, Pencil, Check, X as XIcon } from 'lucide-react';
+import { MessageSquare, Settings, Plus, Trash, Pencil, Check, X as XIcon, SplitSquareHorizontal } from 'lucide-react';
 import paivaLogo from '../assets/paiva_logo.png';
 import { cn } from '../lib/utils';
 import { useChat } from '../context/ChatContext';
@@ -7,7 +7,12 @@ import SettingsModal from './SettingsModal';
 import { chatService } from '../services/chatService';
 
 export default function Sidebar() {
-  const { conversations, activeConversationId, setActiveConversationId, refreshConversations } = useChat();
+  const { 
+    conversations, 
+    activeConversationId, setActiveConversationId, 
+    secondaryConversationId, setSecondaryConversationId,
+    refreshConversations 
+  } = useChat();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
@@ -17,6 +22,7 @@ export default function Sidebar() {
     if (confirm('Are you sure you want to delete this conversation?')) {
       await chatService.deleteConversation(id);
       if (activeConversationId === id) setActiveConversationId(null);
+      if (secondaryConversationId === id) setSecondaryConversationId(null);
       await refreshConversations();
     }
   };
@@ -40,7 +46,7 @@ export default function Sidebar() {
     <aside className="w-full h-full flex flex-col p-5 text-foreground bg-transparent">
 
       {/* ── Top gradient accent line ──────────────────────────────── */}
-      <div className="h-[2px] -mt-5 mb-5 -mx-5 bg-gradient-to-r from-transparent via-primary/40 to-transparent rounded-full" />
+      <div className="h-[2px] -mt-5 mb-5 -mx-5 bg-linear-to-r from-transparent via-primary/40 to-transparent rounded-full" />
 
       {/* ── Logo / Brand ─────────────────────────────────────────── */}
       <div className="flex items-center gap-3.5 mb-8 px-1.5 animate-in fade-in slide-in-from-left-4 duration-500">
@@ -66,7 +72,7 @@ export default function Sidebar() {
         onClick={() => setActiveConversationId(null)}
         className={cn(
           'mb-6 w-full flex items-center gap-2.5 px-4 py-3 rounded-xl',
-          'bg-gradient-to-r from-primary/12 to-primary/6',
+          'bg-linear-to-r from-primary/12 to-primary/6',
           'dark:from-primary/18 dark:to-primary/8',
           'border border-primary/20 dark:border-primary/25',
           'text-primary text-sm font-semibold tracking-snug',
@@ -106,7 +112,7 @@ export default function Sidebar() {
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               'animate-in fade-in slide-in-from-left-4',
               // Active state
-              activeConversationId === c.id
+              (activeConversationId === c.id || secondaryConversationId === c.id)
                 ? 'bg-primary/10 dark:bg-primary/15 text-primary border border-primary/20 dark:border-primary/25 shadow-neon-sm'
                 : 'text-foreground hover:bg-secondary/45 hover:text-primary border border-transparent hover:border-border/40',
             )}
@@ -116,7 +122,7 @@ export default function Sidebar() {
           >
             <MessageSquare
               size={15}
-              strokeWidth={activeConversationId === c.id ? 2.5 : 1.75}
+              strokeWidth={(activeConversationId === c.id || secondaryConversationId === c.id) ? 2.5 : 1.75}
               className="shrink-0 transition-transform duration-200 group-hover:scale-110"
             />
             {renamingId === c.id ? (
@@ -135,10 +141,17 @@ export default function Sidebar() {
               <>
                 <span className="truncate flex-1">{c.title}</span>
                 <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={(e) => startRename(e, c.id, c.title)} className="p-1 text-muted-foreground hover:text-primary transition-colors">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setSecondaryConversationId(c.id); }} 
+                    className="p-1 text-muted-foreground hover:text-primary transition-colors"
+                    title="Open in split view"
+                  >
+                    <SplitSquareHorizontal size={14} />
+                  </button>
+                  <button onClick={(e) => startRename(e, c.id, c.title)} className="p-1 text-muted-foreground hover:text-primary transition-colors" title="Rename">
                     <Pencil size={14} />
                   </button>
-                  <button onClick={(e) => handleDelete(e, c.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors">
+                  <button onClick={(e) => handleDelete(e, c.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors" title="Delete">
                     <Trash size={14} />
                   </button>
                 </div>

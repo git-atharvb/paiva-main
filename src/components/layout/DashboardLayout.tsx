@@ -1,3 +1,4 @@
+import { useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { cn } from '../../lib/utils';
 
@@ -8,8 +9,48 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ header, sidebar, children }: DashboardLayoutProps) {
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const saved = localStorage.getItem('sidebarWidth');
+    return saved ? parseInt(saved, 10) : 288;
+  });
+  const [isResizing, setIsResizing] = useState(false);
+
+  const startResizing = useCallback((e: React.MouseEvent) => {
+    setIsResizing(true);
+    e.preventDefault();
+  }, []);
+
+  const resize = useCallback((e: MouseEvent) => {
+    if (isResizing) {
+      const newWidth = Math.max(220, Math.min(600, e.clientX));
+      setSidebarWidth(newWidth);
+    }
+  }, [isResizing]);
+
+  const stopResizing = useCallback(() => {
+    setIsResizing(false);
+    localStorage.setItem('sidebarWidth', sidebarWidth.toString());
+  }, [sidebarWidth]);
+
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', resize);
+      document.addEventListener('mouseup', stopResizing);
+    } else {
+      document.removeEventListener('mousemove', resize);
+      document.removeEventListener('mouseup', stopResizing);
+    }
+    return () => {
+      document.removeEventListener('mousemove', resize);
+      document.removeEventListener('mouseup', stopResizing);
+    };
+  }, [isResizing, resize, stopResizing]);
+
   return (
-    <div className="flex h-dvh w-full overflow-hidden transition-colors duration-700 bg-background bg-mesh bg-aurora relative">
+    <div className={cn(
+      "flex h-dvh w-full overflow-hidden transition-colors duration-700 bg-background bg-mesh bg-aurora relative",
+      isResizing && "select-none cursor-col-resize"
+    )}>
 
       {/* ── Floating ambient orb ────────────────────────────────────── */}
       <div
@@ -18,7 +59,13 @@ export function DashboardLayout({ header, sidebar, children }: DashboardLayoutPr
       />
 
       {/* ── Floating Sidebar (bento box) ─────────────────────────────── */}
-      <div className="hidden md:flex w-72 p-4 shrink-0 z-10">
+      <div 
+        className={cn(
+          "hidden md:flex relative p-4 shrink-0 z-10",
+          !isResizing && "transition-[width] duration-300 ease-smooth"
+        )}
+        style={{ width: `${sidebarWidth}px` }}
+      >
         <div
           className={cn(
             'w-full h-full rounded-3xl overflow-hidden',
@@ -28,6 +75,17 @@ export function DashboardLayout({ header, sidebar, children }: DashboardLayoutPr
           )}
         >
           {sidebar}
+        </div>
+
+        {/* ── Resize Handle ───────────────────────────────────────────── */}
+        <div
+          className="absolute top-0 right-0 w-4 h-full cursor-col-resize z-50 flex items-center justify-center group"
+          onMouseDown={startResizing}
+        >
+          <div className={cn(
+            "w-1 h-12 rounded-full transition-colors duration-200",
+            isResizing ? "bg-primary shadow-neon-sm" : "bg-border/30 group-hover:bg-primary/50"
+          )} />
         </div>
       </div>
 
@@ -48,7 +106,7 @@ export function DashboardLayout({ header, sidebar, children }: DashboardLayoutPr
         </header>
 
         {/* ── Gradient divider line ──────────────────────────────────── */}
-        <div className="h-px mb-3 mx-4 bg-gradient-to-r from-transparent via-border/50 to-transparent" />
+        <div className="h-px mb-3 mx-4 bg-linear-to-r from-transparent via-border/50 to-transparent" />
 
         {/* ── Main Content ────────────────────────────────────────────── */}
         <main

@@ -66,7 +66,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           <h2 className="text-xl font-bold tracking-tight text-foreground">Settings</h2>
           <button 
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-secondary/50 transition-colors text-muted-foreground hover:text-foreground hover:rotate-90 transition-transform duration-300"
+            className="p-1.5 rounded-full hover:bg-secondary/50 text-muted-foreground hover:text-foreground hover:rotate-90 transition-transform duration-300"
           >
             <X size={20} />
           </button>

@@ -31,11 +31,18 @@ function ImageItem({
   onRemove: (url: string) => void,
   isSingle?: boolean
 }) {
+  const [currentUrl, setCurrentUrl] = useState(url);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentUrl(url);
+  }, [url]);
+
   const handleDownload = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     try {
-      const response = await fetchWithAuth(`/api/images/download?url=${encodeURIComponent(url)}`);
+      const response = await fetchWithAuth(`/api/images/download?url=${encodeURIComponent(currentUrl)}`);
       const blob = await response.blob();
       const objUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -52,14 +59,14 @@ function ImageItem({
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(objUrl);
-    } catch (err) {
-      window.open(url, '_blank');
+    } catch (err) { // eslint-disable-line @typescript-eslint/no-unused-vars
+      window.open(currentUrl, '_blank');
     }
   };
 
   return (
     <figure 
-      onClick={() => onExpand(url)}
+      onClick={() => onExpand(currentUrl)}
       className={cn(
         "overflow-hidden rounded-xl border border-border/40 bg-muted/30 dark:bg-black/20 group relative flex items-center justify-center cursor-zoom-in shrink-0 min-h-0 min-w-0",
         "shadow-1 hover:shadow-2 transition-shadow duration-300",
@@ -68,15 +75,22 @@ function ImageItem({
       style={style}
     >
       <img
-        src={url}
+        src={currentUrl}
         alt={alt}
-        onError={() => onRemove(url)}
+        crossOrigin="anonymous"
+        onError={() => {
+          if (!currentUrl.includes('wsrv.nl')) {
+            setCurrentUrl(`https://wsrv.nl/?url=${encodeURIComponent(url)}`);
+          } else {
+            onRemove(url);
+          }
+        }}
         className={cn(
           "w-full h-full transition-transform duration-500 group-hover:scale-105",
           isSingle ? "object-contain" : "object-cover"
         )}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-t from-black/55 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       
       {/* Top right actions (Download) */}
       <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex gap-2">
@@ -103,6 +117,7 @@ export default function WikipediaImage({ matches, className }: WikipediaImagePro
 
   useEffect(() => {
     let isMounted = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
 
     const fetchAll = async () => {
@@ -120,7 +135,7 @@ export default function WikipediaImage({ matches, className }: WikipediaImagePro
              globalImageCache[term] = urls;
              results.push({ url: urls[0], term, alt });
            }
-        } catch (err) {
+        } catch (err) { // eslint-disable-line @typescript-eslint/no-unused-vars
            // silently ignore failures for individual terms to let others load
         }
       }
@@ -139,6 +154,7 @@ export default function WikipediaImage({ matches, className }: WikipediaImagePro
     return () => {
       isMounted = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(matches)]);
 
   const handleRemoveUrl = (failedUrl: string) => {
@@ -166,7 +182,7 @@ export default function WikipediaImage({ matches, className }: WikipediaImagePro
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(objUrl);
-    } catch (err) {
+    } catch (err) { // eslint-disable-line @typescript-eslint/no-unused-vars
       window.open(maximizedItem.url, '_blank');
     }
   };

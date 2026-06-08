@@ -21,7 +21,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         'hover:brightness-[1.10]',
         'relative overflow-hidden',
         // Subtle sheen sweep on hover
-        'after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/15 after:to-transparent',
+        'after:absolute after:inset-0 after:bg-linear-to-r after:from-transparent after:via-white/15 after:to-transparent',
         'after:translate-x-[-150%] after:skew-x-[-20deg]',
         'hover:after:translate-x-[150%] after:transition-transform after:duration-700 after:ease-out',
       ].join(' '),
@@ -74,7 +74,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         'shadow-neon hover:shadow-[0_0_20px_oklch(from_var(--color-ring)_l_c_h/0.55),0_0_48px_oklch(from_var(--color-ring)_l_c_h/0.28)]',
         'hover:brightness-[1.12]',
         'relative overflow-hidden',
-        'after:absolute after:inset-0 after:bg-gradient-to-r after:from-transparent after:via-white/12 after:to-transparent',
+        'after:absolute after:inset-0 after:bg-linear-to-r after:from-transparent after:via-white/12 after:to-transparent',
         'after:translate-x-[-150%] after:skew-x-[-20deg]',
         'hover:after:translate-x-[150%] after:transition-transform after:duration-700 after:ease-out',
       ].join(' '),
@@ -102,7 +102,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           'focus-visible:outline-none',
           'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
           'focus-visible:ring-offset-background',
-          'focus-visible:shadow-[0_0_0_4px_oklch(from_var(--color-ring)_l_c_h_/_0.18)]',
+          'focus-visible:shadow-[0_0_0_4px_oklch(from_var(--color-ring)_l_c_h/0.18)]',
           // ── Disabled state ───────────────────────────────────────────
           'disabled:opacity-40 disabled:pointer-events-none disabled:shadow-none',
           // ── Selected variant & size ──────────────────────────────────

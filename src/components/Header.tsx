@@ -24,7 +24,7 @@ export default function Header({
       >
         PAIVA
         {/* Gradient underline on hover */}
-        <div className="absolute -bottom-1 left-0 right-0 h-[2px] rounded-full bg-gradient-to-r from-primary/0 via-primary/60 to-primary/0 scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-bounce-soft origin-center" />
+        <div className="absolute -bottom-1 left-0 right-0 h-[2px] rounded-full bg-linear-to-r from-primary/0 via-primary/60 to-primary/0 scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-bounce-soft origin-center" />
       </div>
 
       {/* ── Right controls ───────────────────────────────────────── */}
@@ -64,10 +64,10 @@ export default function Header({
             'transition-all duration-300 ease-spring',
             'hover:shadow-neon-sm hover:border-primary/35',
             // Rotate the icon on theme change
-            '[&>*]:transition-transform [&>*]:duration-500 [&>*]:ease-spring',
+            '*:transition-transform *:duration-500 *:ease-spring',
             theme === 'dark' || theme === 'cyberpunk' || theme === 'midnight'
-              ? '[&>*]:rotate-180'
-              : '[&>*]:rotate-0',
+              ? '*:rotate-180'
+              : '*:rotate-0',
           )}
         >
           {theme === 'light'

@@ -49,10 +49,10 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             'border border-white/50',
             'shadow-premium',
             // Bright inner-top highlight (light) + soft bottom darkening
-            '[box-shadow:var(--shadow-premium),inset_0_1px_0_oklch(1_0_0_/_0.78),inset_0_-1px_0_oklch(0_0_0_/_0.03)]',
+            '[box-shadow:var(--shadow-premium),inset_0_1px_0_oklch(1_0_0/0.78),inset_0_-1px_0_oklch(0_0_0/0.03)]',
             // Dark: obsidian glass + neon ring
-            'dark:bg-[oklch(0.130_0.024_262_/_0.90)] dark:backdrop-blur-[36px]',
-            'dark:border-[oklch(0.230_0.026_262_/_0.60)]',
+            'dark:bg-[oklch(0.130_0.024_262/0.90)] dark:backdrop-blur-[36px]',
+            'dark:border-[oklch(0.230_0.026_262/0.60)]',
             'dark:[box-shadow:var(--shadow-premium-dark)]',
             // Noise texture for tactile depth
             'bg-noise',

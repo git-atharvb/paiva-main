@@ -110,11 +110,11 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
         
         {/* Divider */}
         <div className="flex items-center gap-3 my-4">
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+          <div className="flex-1 h-px bg-linear-to-r from-transparent via-border to-transparent" />
           <span className="text-xs uppercase text-muted-foreground/60 font-semibold tracking-widest">
             Or continue with
           </span>
-          <div className="flex-1 h-px bg-gradient-to-l from-transparent via-border to-transparent" />
+          <div className="flex-1 h-px bg-linear-to-l from-transparent via-border to-transparent" />
         </div>
 
         <div className="flex justify-center w-full transform transition-transform duration-300 hover:scale-[1.02]">

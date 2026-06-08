@@ -17,8 +17,16 @@ interface ChatContextType {
   setConversationIdWithoutFetch: (id: string) => void;
   messages: ChatMessage[];
   setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
+  
+  secondaryConversationId: string | null;
+  setSecondaryConversationId: (id: string | null) => void;
+  setSecondaryConversationIdWithoutFetch: (id: string) => void;
+  secondaryMessages: ChatMessage[];
+  setSecondaryMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
+  
   refreshConversations: () => Promise<void>;
   isLoadingHistory: boolean;
+  isLoadingSecondaryHistory: boolean;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -26,13 +34,22 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [secondaryConversationId, setSecondaryConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [secondaryMessages, setSecondaryMessages] = useState<ChatMessage[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [isLoadingSecondaryHistory, setIsLoadingSecondaryHistory] = useState(false);
   const skipNextFetch = React.useRef(false);
+  const skipNextSecondaryFetch = React.useRef(false);
 
   const setConversationIdWithoutFetch = useCallback((id: string) => {
     skipNextFetch.current = true;
     setActiveConversationId(id);
+  }, []);
+
+  const setSecondaryConversationIdWithoutFetch = useCallback((id: string) => {
+    skipNextSecondaryFetch.current = true;
+    setSecondaryConversationId(id);
   }, []);
 
   const refreshConversations = useCallback(async () => {
@@ -47,12 +64,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   // Initial load
   useEffect(() => {
     // eslint-disable-next-line
-    refreshConversations().then(() => {
-      // We don't automatically select the first chat because we want them to see 
-      // the welcome message and start a new chat by default, or we can select it.
-      // The user requested "able to store chats all on the respective user login and user should be able to access all chats properly".
-      // Let's not auto-select so New Conversation is default.
-    });
+    refreshConversations().then(() => {});
   }, [refreshConversations]);
 
   // Load messages when active conversation changes
@@ -74,7 +86,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
 
     let isMounted = true;
-    // eslint-disable-next-line
     setIsLoadingHistory(true);
 
     chatService.getMessages(activeConversationId)
@@ -98,6 +109,43 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     return () => { isMounted = false; };
   }, [activeConversationId]);
 
+  // Load secondary messages
+  useEffect(() => {
+    if (!secondaryConversationId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSecondaryMessages([]);
+      return;
+    }
+
+    if (skipNextSecondaryFetch.current) {
+      skipNextSecondaryFetch.current = false;
+      return;
+    }
+
+    let isMounted = true;
+    setIsLoadingSecondaryHistory(true);
+
+    chatService.getMessages(secondaryConversationId)
+      .then((apiMessages: ApiMessage[]) => {
+        if (!isMounted) return;
+        const mapped = apiMessages.map(m => ({
+          id: m.id,
+          role: m.role.toLowerCase() as 'user' | 'assistant' | 'system',
+          content: m.content
+        }));
+        setSecondaryMessages(mapped);
+      })
+      .catch(err => {
+        console.error('Failed to load secondary messages', err);
+        if (isMounted) toast.error('Failed to load split view history');
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingSecondaryHistory(false);
+      });
+
+    return () => { isMounted = false; };
+  }, [secondaryConversationId]);
+
   return (
     <ChatContext.Provider
       value={{
@@ -107,8 +155,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         setConversationIdWithoutFetch,
         messages,
         setMessages,
+        secondaryConversationId,
+        setSecondaryConversationId,
+        setSecondaryConversationIdWithoutFetch,
+        secondaryMessages,
+        setSecondaryMessages,
         refreshConversations,
-        isLoadingHistory
+        isLoadingHistory,
+        isLoadingSecondaryHistory
       }}
     >
       {children}

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from './ui/Button';
-import { Send, Sparkles, Square, Copy, CheckCircle2, Paperclip, X, Image as ImageIcon, Link as LinkIcon, Mic, MicOff, Volume2, VolumeX, MonitorPlay, Download, ChevronDown, ArrowRight } from 'lucide-react';
+import { Send, Sparkles, Square, Copy, CheckCircle2, Paperclip, X, Image as ImageIcon, Link as LinkIcon, Mic, MicOff, Volume2, VolumeX, MonitorPlay, Download, ChevronDown, ArrowRight, FileText, Loader2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -11,6 +11,9 @@ import { useChat } from '../context/ChatContext';
 import WikipediaImage from './WikipediaImage';
 import { fetchWithAuth } from '../services/api';
 import paivaLogo from '../assets/paiva_logo.png';
+import * as htmlToImage from 'html-to-image';
+import { jsPDF } from 'jspdf';
+import toast from 'react-hot-toast';
 
 const extractText = (node: React.ReactNode): string => {
   if (typeof node === 'string') return node;
@@ -71,6 +74,51 @@ const ModelDropdown = ({ value, onChange }: { value: string, onChange: (v: strin
   );
 };
 
+const VoiceDropdown = ({ value, onChange, availableVoices }: { value: string, onChange: (v: string) => void, availableVoices: SpeechSynthesisVoice[] }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  if (!availableVoices || availableVoices.length === 0) return null;
+  
+  const selected = availableVoices.find(v => v.voiceURI === value) || availableVoices[0];
+
+  return (
+    <div className="relative ml-2 hidden sm:block">
+      <button 
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-1.5 bg-secondary/35 border border-border/40 text-xs text-foreground rounded-lg px-2.5 py-1.5 outline-none hover:border-primary/40 transition-colors hover:bg-secondary/50 focus:ring-2 focus:ring-primary/20 shadow-sm"
+        title="Select AI Voice"
+      >
+        <Volume2 size={14} className="text-muted-foreground" />
+        <span className="truncate max-w-[80px] font-medium">{selected.name.replace(/Microsoft |Google /g, '')}</span>
+        <ChevronDown size={12} className={cn("transition-transform duration-200 text-muted-foreground", isOpen && "rotate-180")} />
+      </button>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+          <div className="absolute right-0 top-full mt-2 w-64 z-50 rounded-xl bg-card/95 backdrop-blur-xl border border-border/50 shadow-3 dark:shadow-premium-dark overflow-hidden animate-in fade-in zoom-in-95 duration-200 py-1.5">
+            <div className="px-3 py-1.5 text-[10px] uppercase font-bold text-muted-foreground tracking-wider">AI Voices</div>
+            {availableVoices.map(v => (
+              <button
+                key={v.voiceURI}
+                onClick={() => { onChange(v.voiceURI); setIsOpen(false); }}
+                className={cn(
+                  "w-full text-left px-3.5 py-2.5 text-xs transition-colors hover:bg-primary/15 hover:text-primary flex items-center gap-2",
+                  value === v.voiceURI ? "bg-primary/10 text-primary font-bold" : "text-foreground font-medium"
+                )}
+              >
+                <div className={cn("size-1.5 rounded-full shrink-0", value === v.voiceURI ? "bg-primary shadow-neon-sm" : "bg-transparent")} />
+                <span className="truncate">{v.name}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 const QUICK_ACTIONS = [
   { label: 'Explain a concept', prompt: 'Explain ' },
   { label: 'Write code', prompt: 'Write a function that ' },
@@ -78,17 +126,21 @@ const QUICK_ACTIONS = [
   { label: 'Creative writing', prompt: 'Write a creative ' },
 ];
 
-export default function ChatArea() {
-  const { 
-    messages, setMessages, 
-    activeConversationId, setConversationIdWithoutFetch,
-    refreshConversations 
-  } = useChat();
+export default function ChatArea({ isSecondary = false }: { isSecondary?: boolean }) {
+  const chatContext = useChat();
+  
+  const messages = isSecondary ? chatContext.secondaryMessages : chatContext.messages;
+  const setMessages = isSecondary ? chatContext.setSecondaryMessages : chatContext.setMessages;
+  const activeConversationId = isSecondary ? chatContext.secondaryConversationId : chatContext.activeConversationId;
+  const setConversationIdWithoutFetch = isSecondary ? chatContext.setSecondaryConversationIdWithoutFetch : chatContext.setConversationIdWithoutFetch;
+  const refreshConversations = chatContext.refreshConversations;
 
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [contextImageEnabled, setContextImageEnabled] = useState(false);
   const [aiModel, setAiModel] = useState('');
+  const [aiVoice, setAiVoice] = useState<string>(() => localStorage.getItem('aiVoice') || '');
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [attachedDocumentText, setAttachedDocumentText] = useState<string | null>(null);
   const [attachedImageBase64, setAttachedImageBase64] = useState<string | null>(null);
   const [attachedFileName, setAttachedFileName] = useState<string | null>(null);
@@ -105,12 +157,14 @@ export default function ChatArea() {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const urlInputRef = useRef<HTMLInputElement>(null);
   const youtubeInputRef = useRef<HTMLInputElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [speakingId, setSpeakingId] = useState<string | null>(null);
+  const [isGeneratingPdfId, setIsGeneratingPdfId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const stopTTS = () => {
@@ -136,6 +190,13 @@ export default function ChatArea() {
     if (!cleanText) return;
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
+    if (aiVoice && availableVoices.length > 0) {
+      const selectedVoice = availableVoices.find(v => v.voiceURI === aiVoice);
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+    }
+    
     utterance.onend = () => setSpeakingId(null);
     utterance.onerror = () => setSpeakingId(null);
     
@@ -144,6 +205,50 @@ export default function ChatArea() {
   };
 
   useEffect(() => {
+    // Load voices for TTS
+    const loadVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        // Filter out for 4 high quality English voices if possible
+        // Try to find specific good voices first
+        const preferred = voices.filter(v => 
+          v.name.includes('Microsoft Aria Online') || 
+          v.name.includes('Google US English') ||
+          v.name.includes('Microsoft Guy Online') ||
+          v.name.includes('Google UK English Female') ||
+          v.name.includes('Apple Samantha') ||
+          v.name.includes('Samantha')
+        );
+        
+        let finalVoices = [];
+        if (preferred.length >= 8) {
+          finalVoices = preferred.slice(0, 8);
+        } else {
+          // Fallback: just get 8 distinct English voices
+          const englishVoices = voices.filter(v => v.lang.startsWith('en-'));
+          finalVoices = [...new Set([...preferred, ...englishVoices])].slice(0, 8);
+        }
+        
+        // If still empty, just use whatever is available
+        if (finalVoices.length === 0) finalVoices = voices.slice(0, 8);
+        
+        setAvailableVoices(finalVoices);
+        
+        // Set default voice if none selected
+        setAiVoice(current => {
+          if (!current && finalVoices.length > 0) {
+            const defaultVoice = finalVoices[0].voiceURI;
+            localStorage.setItem('aiVoice', defaultVoice);
+            return defaultVoice;
+          }
+          return current;
+        });
+      }
+    };
+    
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+
     // Fetch user location in the background
     fetch('https://ipapi.co/json/')
       .then(res => res.json())
@@ -155,18 +260,20 @@ export default function ChatArea() {
       .catch(err => console.error('Failed to fetch location:', err));
 
     // Initialize Web Speech API
-    // @ts-ignore
+    // @ts-expect-error - Web Speech API may not have types in standard DOM lib
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = false;
       recognitionRef.current.interimResults = false;
       
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       recognitionRef.current.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
         setInput((prev) => prev + (prev.trim() ? ' ' : '') + transcript);
       };
       
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       recognitionRef.current.onerror = (event: any) => {
         console.error('Speech recognition error', event.error);
         setIsRecording(false);
@@ -380,6 +487,86 @@ export default function ChatArea() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const downloadMessagePdf = async (msgId: string) => {
+    try {
+      setIsGeneratingPdfId(msgId);
+      const element = document.getElementById(`msg-content-${msgId}`);
+      if (!element) {
+        toast.error('Could not find message content to capture');
+        return;
+      }
+      
+      console.log('Generating PDF for message:', msgId);
+      
+      const width = element.offsetWidth;
+      const height = element.offsetHeight;
+      
+      if (width === 0 || height === 0) {
+        throw new Error('Element dimensions are zero');
+      }
+
+      // Freeze all images as Base64 to prevent html-to-image from re-fetching dynamic images.
+      // Since they load dynamically from an AI (e.g. pollinations), a re-fetch generates a totally different image.
+      const imgs = Array.from(element.querySelectorAll('img'));
+      const originalSrcs = new Map<HTMLImageElement, string>();
+
+      imgs.forEach(img => {
+        if (img.src && !img.src.startsWith('data:') && img.naturalWidth > 0) {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0);
+              const dataUrl = canvas.toDataURL('image/png');
+              originalSrcs.set(img, img.src);
+              img.src = dataUrl; // Instantly lock it to the exact pixels currently on screen
+            }
+          } catch (e) {
+            console.warn('Could not freeze image to base64 (CORS?), leaving as is', e);
+          }
+        }
+      });
+
+      // Generate high resolution image
+      const imgData = await htmlToImage.toJpeg(element, { 
+        quality: 0.95,
+        backgroundColor: document.documentElement.classList.contains('dark') ? '#09090b' : '#ffffff',
+        pixelRatio: 2, // 2x resolution for very sharp text
+        imagePlaceholder: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
+      });
+      
+      // Restore original URLs instantly so the UI isn't bogged down with giant base64 strings
+      imgs.forEach(img => {
+        if (originalSrcs.has(img)) {
+          img.src = originalSrcs.get(img)!;
+        }
+      });
+      
+      // Scale down the physical PDF size so fonts don't appear gigantic
+      const scale = 0.65;
+      const scaledWidth = width * scale;
+      const scaledHeight = height * scale;
+
+      const pdf = new jsPDF({
+        orientation: scaledWidth > scaledHeight ? 'landscape' : 'portrait',
+        unit: 'px',
+        format: [scaledWidth + 40, scaledHeight + 40]
+      });
+      
+      pdf.addImage(imgData, 'JPEG', 20, 20, scaledWidth, scaledHeight);
+      pdf.save(`PAIVA_Response_${msgId.slice(0,6)}.pdf`);
+      console.log('PDF saved successfully');
+      toast.success('PDF downloaded successfully!');
+    } catch (err) {
+      console.error('PDF Generation Error:', err);
+      toast.error('Failed to generate PDF. See console for details.');
+    } finally {
+      setIsGeneratingPdfId(null);
+    }
+  };
+
   const isWelcomeState = messages.length <= 1 && messages[0]?.id === 'welcome';
 
   return (
@@ -411,17 +598,28 @@ export default function ChatArea() {
           </button>
 
           <ModelDropdown value={aiModel} onChange={setAiModel} />
+          <VoiceDropdown value={aiVoice} onChange={setAiVoice} availableVoices={availableVoices} />
 
           {/* Status dot */}
           <span className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
             <span className="size-2 rounded-full bg-emerald-400 dark:bg-emerald-300 shadow-[0_0_5px_oklch(0.70_0.19_155/0.7)] animate-pulse" />
             Online
           </span>
+          {isSecondary && (
+            <button
+              type="button"
+              onClick={() => chatContext.setSecondaryConversationId(null)}
+              className="ml-2 text-muted-foreground hover:text-destructive transition-colors p-1.5 rounded-lg border border-transparent hover:border-destructive/30 hover:bg-destructive/10"
+              title="Close split view"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
       </div>
 
       {/* ── Messages ─────────────────────────────────────────────── */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto space-y-4 pr-1 -mr-1 relative">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto space-y-4 pr-1 -mr-1 relative magical-scrollbar">
 
         {/* ── Welcome state ──────────────────────────────────────── */}
         {isWelcomeState && (
@@ -482,6 +680,7 @@ export default function ChatArea() {
               return (
                 <>
                 <div
+                  id={msg.role === 'assistant' ? `msg-content-${msg.id}` : undefined}
                   className={cn(
                     'px-5 py-3.5 rounded-2xl text-sm leading-body tracking-snug transition-all duration-300',
                     msg.role === 'assistant'
@@ -497,7 +696,7 @@ export default function ChatArea() {
                           'max-w-[82%]',
                           'bg-primary text-primary-foreground rounded-br-sm',
                           'shadow-neon-sm',
-                          '[background-image:linear-gradient(135deg,var(--color-primary)_0%,oklch(from_var(--color-primary)_l_c_h/0.8)_100%)]',
+                          'bg-[linear-gradient(135deg,var(--color-primary)_0%,oklch(from_var(--color-primary)_l_c_h/0.8)_100%)]',
                         ].join(' '),
                   )}
                 >
@@ -517,7 +716,19 @@ export default function ChatArea() {
                                 const searchTerm = src.replace('wiki:', '');
                                 return <WikipediaImage matches={[{ term: searchTerm, alt: alt || '' }]} />;
                               }
-                              return <img src={src} alt={alt} className="rounded-xl max-w-full h-auto" />;
+                              return (
+                                <img 
+                                  src={src} 
+                                  alt={alt} 
+                                  crossOrigin="anonymous"
+                                  onError={(e) => {
+                                    if (src && !src.includes('wsrv.nl')) {
+                                      e.currentTarget.src = `https://wsrv.nl/?url=${encodeURIComponent(src)}`;
+                                    }
+                                  }}
+                                  className="rounded-xl max-w-full h-auto" 
+                                />
+                              );
                             },
                             code({ inline, className, children, ...props }: React.ComponentPropsWithoutRef<'code'> & { inline?: boolean }) {
                               const match = /language-(\w+)/.exec(className || '')
@@ -528,7 +739,7 @@ export default function ChatArea() {
                                 <div className="relative my-4 rounded-xl overflow-hidden border border-border/40 bg-[#0d1117] shadow-2">
                                   {/* Code block header with gradient accent */}
                                   <div className="flex items-center justify-between px-4 py-2 bg-card/90 text-xs text-muted-foreground border-b border-border/40 relative">
-                                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+                                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-linear-to-r from-transparent via-primary/40 to-transparent" />
                                     <span className="font-mono font-semibold">{language}</span>
                                     <button
                                       type="button"
@@ -585,6 +796,14 @@ export default function ChatArea() {
                   title="Copy message"
                 >
                   {copiedId === msg.id ? <CheckCircle2 size={15} className="text-emerald-500" /> : <Copy size={15} />}
+                </button>
+                <button
+                  onClick={() => downloadMessagePdf(msg.id)}
+                  disabled={isGeneratingPdfId === msg.id}
+                  className="p-1.5 rounded-md text-muted-foreground hover:bg-secondary/45 hover:text-foreground transition-colors disabled:opacity-50"
+                  title="Download as PDF"
+                >
+                  {isGeneratingPdfId === msg.id ? <Loader2 size={15} className="animate-spin" /> : <FileText size={15} />}
                 </button>
                 <button
                   onClick={() => playTTS(msg.id, msg.content)}
@@ -809,7 +1028,7 @@ export default function ChatArea() {
                 type="checkbox"
                 checked={contextImageEnabled}
                 onChange={(e) => setContextImageEnabled(e.target.checked)}
-                className="w-3.5 h-3.5 rounded-sm border-muted-foreground/30 text-primary focus:ring-primary/40 cursor-pointer accent-[var(--color-primary)]"
+                className="w-3.5 h-3.5 rounded-sm border-muted-foreground/30 text-primary focus:ring-primary/40 cursor-pointer accent-(--color-primary)"
               />
               <span className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-full mr-2 whitespace-nowrap bg-card text-foreground px-2 py-1 rounded-lg text-[11px] shadow-1 border border-border/40 pointer-events-none">
                 Context Image
