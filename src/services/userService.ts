@@ -1,19 +1,42 @@
 import { fetchWithAuth } from './api';
 
+export interface UserSettings {
+  customInstructions: string;
+  assistantName: string;
+  aboutUser: string;
+  responseStyle: string;
+  memoryEnabled: boolean;
+}
+
+interface UserSettingsResponse {
+  customInstructions?: string;
+  assistantName?: string;
+  aboutUser?: string;
+  responseStyle?: string;
+  memoryEnabled?: boolean | string;
+}
+
 export const userService = {
-  getSettings: async (): Promise<{ customInstructions: string }> => {
+  getSettings: async (): Promise<UserSettings> => {
     const response = await fetchWithAuth('/api/user/settings');
     if (!response.ok) throw new Error('Failed to fetch user settings');
-    return response.json();
+    const data: UserSettingsResponse = await response.json();
+    return {
+      customInstructions: data.customInstructions || '',
+      assistantName: data.assistantName || 'PAIVA',
+      aboutUser: data.aboutUser || '',
+      responseStyle: data.responseStyle || 'Balanced',
+      memoryEnabled: data.memoryEnabled === undefined ? true : data.memoryEnabled === true || data.memoryEnabled === 'true'
+    };
   },
 
-  updateSettings: async (customInstructions: string): Promise<void> => {
+  updateSettings: async (settings: UserSettings): Promise<void> => {
     const response = await fetchWithAuth('/api/user/settings', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ customInstructions })
+      body: JSON.stringify(settings)
     });
     
     if (!response.ok) throw new Error('Failed to update user settings');

@@ -1,12 +1,19 @@
 import React, { useState } from 'react';
-import { MessageSquare, Settings, Plus, Trash, Pencil, Check, X as XIcon, SplitSquareHorizontal } from 'lucide-react';
+import { ClipboardList, MessageSquare, Settings, Plus, Trash, Pencil, Check, X as XIcon, SplitSquareHorizontal } from 'lucide-react';
 import paivaLogo from '../assets/paiva_logo.png';
 import { cn } from '../lib/utils';
 import { useChat } from '../context/ChatContext';
 import SettingsModal from './SettingsModal';
 import { chatService } from '../services/chatService';
 
-export default function Sidebar() {
+type WorkspaceView = 'chat' | 'todos';
+
+interface SidebarProps {
+  activeView: WorkspaceView;
+  onViewChange: (view: WorkspaceView) => void;
+}
+
+export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
   const { 
     conversations, 
     activeConversationId, setActiveConversationId, 
@@ -69,7 +76,10 @@ export default function Sidebar() {
 
       {/* ── New Chat button ───────────────────────────────────────── */}
       <button
-        onClick={() => setActiveConversationId(null)}
+        onClick={() => {
+          onViewChange('chat');
+          setActiveConversationId(null);
+        }}
         className={cn(
           'mb-6 w-full flex items-center gap-2.5 px-4 py-3 rounded-xl',
           'bg-linear-to-r from-primary/12 to-primary/6',
@@ -92,6 +102,39 @@ export default function Sidebar() {
       </button>
 
       {/* ── Conversations label ───────────────────────────────────── */}
+      <div className="text-label text-muted-foreground/60 mb-3 px-2 animate-in fade-in duration-500 delay-100">
+        Workspace
+      </div>
+
+      <nav className="space-y-1 mb-6">
+        {[
+          { id: 'chat' as const, label: 'Chat', icon: MessageSquare },
+          { id: 'todos' as const, label: 'ToDo List', icon: ClipboardList },
+        ].map((item) => {
+          const Icon = item.icon;
+          const isActive = activeView === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => onViewChange(item.id)}
+              className={cn(
+                'w-full group relative px-3.5 py-2.5 rounded-xl',
+                'flex items-center gap-3 text-sm font-semibold tracking-snug',
+                'transition-all duration-200 ease-spring',
+                'hover:scale-[1.01] hover:-translate-y-px active:scale-[0.98]',
+                isActive
+                  ? 'bg-primary/10 dark:bg-primary/15 text-primary border border-primary/20 shadow-neon-sm'
+                  : 'text-foreground hover:bg-secondary/45 hover:text-primary border border-transparent hover:border-border/40'
+              )}
+            >
+              <Icon size={16} strokeWidth={isActive ? 2.5 : 1.8} className="shrink-0" />
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+
       <div className="text-label text-muted-foreground/60 mb-3 px-2 animate-in fade-in duration-500 delay-100">
         Recent
       </div>

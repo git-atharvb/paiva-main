@@ -4,20 +4,26 @@ import toast from 'react-hot-toast'
 import Header from './components/Header'
 import Sidebar from './components/Sidebar'
 import ChatArea from './components/ChatArea'
+import TodoList from './components/TodoList'
 import { DashboardLayout } from './components/layout/DashboardLayout'
 import { ChatProvider } from './context/ChatContext'
 
 import { useChat } from './context/ChatContext'
 
-function DashboardContent({ user, handleLogout }: { user: { name?: string } | null, handleLogout: () => void }) {
+type DashboardView = 'chat' | 'todos';
+
+function DashboardContent({ user, handleLogout }: { user: { name?: string; email?: string } | null, handleLogout: () => void }) {
   const { secondaryConversationId } = useChat();
+  const [activeView, setActiveView] = useState<DashboardView>('chat');
 
   return (
     <DashboardLayout
       header={<Header userName={user?.name} onLogout={handleLogout} />}
-      sidebar={<Sidebar />}
+      sidebar={<Sidebar activeView={activeView} onViewChange={setActiveView} />}
     >
-      {secondaryConversationId ? (
+      {activeView === 'todos' ? (
+        <TodoList userEmail={user?.email} />
+      ) : secondaryConversationId ? (
         <div className="flex w-full h-full gap-4">
           <div className="flex-1 min-w-0">
             <ChatArea />

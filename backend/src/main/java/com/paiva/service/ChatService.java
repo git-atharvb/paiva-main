@@ -5,10 +5,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paiva.model.Conversation;
 import com.paiva.model.Message;
+import com.paiva.model.User;
 import com.paiva.repository.ConversationRepository;
 import com.paiva.repository.MessageRepository;
 
@@ -52,7 +55,12 @@ public class ChatService {
 
     public Conversation createOrGetConversation(String conversationId, String userId, String firstMessage) {
         if (conversationId != null && !conversationId.isEmpty()) {
-            return conversationRepository.findById(conversationId).orElseThrow(() -> new RuntimeException("Conversation not found"));
+            Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conversation not found"));
+            if (!conversation.getUserId().equals(userId)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Conversation does not belong to the current user");
+            }
+            return conversation;
         }
         
         // Generate title from first message (max 30 chars)
@@ -78,16 +86,30 @@ public class ChatService {
             ? fullHistory.subList(fullHistory.size() - maxHistoryMessages, fullHistory.size()) 
             : fullHistory;
         
-        // Fetch User's Custom Instructions
-        String customInstructions = userRepository.findById(userId)
-            .map(com.paiva.model.User::getCustomInstructions)
-            .orElse("");
+        User user = userRepository.findById(userId).orElse(null);
+        String assistantName = user != null && user.getAssistantName() != null && !user.getAssistantName().isBlank()
+            ? user.getAssistantName()
+            : "PAIVA";
+        String customInstructions = user != null ? user.getCustomInstructions() : "";
+        String aboutUser = user != null ? user.getAboutUser() : "";
+        String responseStyle = user != null && user.getResponseStyle() != null && !user.getResponseStyle().isBlank()
+            ? user.getResponseStyle()
+            : "Balanced";
+        boolean memoryEnabled = user == null || user.isMemoryEnabled();
 
         // Construct System Prompt
         String currentDate = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("MMMM d, yyyy"));
-        String systemPrompt = """
-                              You are PAIVA, a highly advanced personalized AI virtual assistant. Be helpful, concise, and friendly.
-                              The current date is """ + currentDate + ". Keep this in mind when answering questions about current events.\n";
+        String systemPrompt = "You are " + assistantName + ", a highly advanced personalized AI virtual assistant for this user.\n"
+            + "Your product identity is PAIVA: Personalized AI Virtual Assistant.\n"
+            + "Be helpful, concise, emotionally intelligent, and practical.\n"
+            + "The current date is " + currentDate + ". Keep this in mind when answering questions about current events.\n";
+
+        systemPrompt += "\nPERSONALIZATION PROFILE:\n";
+        systemPrompt += "- Preferred assistant name: " + assistantName + "\n";
+        systemPrompt += "- Response style: " + responseStyle + "\n";
+        if (aboutUser != null && !aboutUser.isBlank()) {
+            systemPrompt += "- What PAIVA knows about the user:\n" + aboutUser + "\n";
+        }
             
         if (contextImageEnabled) {
             systemPrompt += """
@@ -110,7 +132,7 @@ public class ChatService {
 
         // Long-Term Memory Injection
         String longTermSummary = conversation.getSummary();
-        if (longTermSummary != null && !longTermSummary.isBlank()) {
+        if (memoryEnabled && longTermSummary != null && !longTermSummary.isBlank()) {
             systemPrompt += "\n\nLONG-TERM MEMORY (Summary of older messages in this chat):\n" + longTermSummary + "\n";
         }
 
@@ -280,9 +302,13 @@ public class ChatService {
             // Save assistant message to MongoDB
             Message asstMessage = new Message(conversation.getId(), "ASSISTANT", fullResponse.toString());
             messageRepository.save(asstMessage);
+            conversation.setUpdatedAt(java.time.LocalDateTime.now());
+            conversationRepository.save(conversation);
 
             // Trigger async summarization for older messages
-            memoryService.summarizeOldMessages(conversation.getId());
+            if (memoryEnabled) {
+                memoryService.summarizeOldMessages(conversation.getId());
+            }
         });
     }
 
@@ -290,15 +316,20 @@ public class ChatService {
         return conversationRepository.findByUserIdOrderByUpdatedAtDesc(userId);
     }
 
-    public List<Message> getConversationMessages(String conversationId) {
+    public List<Message> getConversationMessages(String conversationId, String userId) {
+        Conversation conv = conversationRepository.findById(conversationId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conversation not found"));
+        if (!conv.getUserId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Conversation does not belong to the current user");
+        }
         return messageRepository.findByConversationIdOrderByTimestampAsc(conversationId);
     }
 
     public void deleteConversation(String conversationId, String userId) {
         Conversation conv = conversationRepository.findById(conversationId)
-            .orElseThrow(() -> new RuntimeException("Conversation not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conversation not found"));
         if (!conv.getUserId().equals(userId)) {
-            throw new RuntimeException("Unauthorized");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Conversation does not belong to the current user");
         }
         messageRepository.deleteByConversationId(conversationId);
         conversationRepository.delete(conv);
@@ -306,9 +337,9 @@ public class ChatService {
 
     public Conversation renameConversation(String conversationId, String userId, String newTitle) {
         Conversation conv = conversationRepository.findById(conversationId)
-            .orElseThrow(() -> new RuntimeException("Conversation not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conversation not found"));
         if (!conv.getUserId().equals(userId)) {
-            throw new RuntimeException("Unauthorized");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Conversation does not belong to the current user");
         }
         conv.setTitle(newTitle);
         conv.setUpdatedAt(java.time.LocalDateTime.now());

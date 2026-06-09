@@ -52,7 +52,9 @@ public class ChatController {
 
     @GetMapping("/conversations/{conversationId}/messages")
     public ResponseEntity<List<Message>> getMessages(@PathVariable String conversationId) {
-        List<Message> messages = chatService.getConversationMessages(conversationId);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        List<Message> messages = chatService.getConversationMessages(conversationId, userDetails.getId());
         return ResponseEntity.ok(messages);
     }
 

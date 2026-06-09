@@ -11,11 +11,12 @@ import ProtectedRoute from './ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 const Dashboard = lazy(() => import('./Dashboard'));
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '684113538725-1bkdm6t6gq96i2es8nl5pcb6vl54apu8.apps.googleusercontent.com';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
-      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || '684113538725-1bkdm6t6gq96i2es8nl5pcb6vl54apu8.apps.googleusercontent.com'}>
+      <GoogleOAuthProvider clientId={googleClientId}>
         <ThemeProvider>
           <BrowserRouter>
             <Routes>

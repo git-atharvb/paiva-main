@@ -20,6 +20,10 @@ public class User {
     private String providerId;
     
     private String customInstructions;
+    private String assistantName = "PAIVA";
+    private String aboutUser;
+    private String responseStyle = "Balanced";
+    private boolean memoryEnabled = true;
 
     @CreatedDate
     private Instant createdAt;
@@ -139,5 +143,37 @@ public class User {
 
     public void setCustomInstructions(String customInstructions) {
         this.customInstructions = customInstructions;
+    }
+
+    public String getAssistantName() {
+        return assistantName;
+    }
+
+    public void setAssistantName(String assistantName) {
+        this.assistantName = assistantName;
+    }
+
+    public String getAboutUser() {
+        return aboutUser;
+    }
+
+    public void setAboutUser(String aboutUser) {
+        this.aboutUser = aboutUser;
+    }
+
+    public String getResponseStyle() {
+        return responseStyle;
+    }
+
+    public void setResponseStyle(String responseStyle) {
+        this.responseStyle = responseStyle;
+    }
+
+    public boolean isMemoryEnabled() {
+        return memoryEnabled;
+    }
+
+    public void setMemoryEnabled(boolean memoryEnabled) {
+        this.memoryEnabled = memoryEnabled;
     }
 }

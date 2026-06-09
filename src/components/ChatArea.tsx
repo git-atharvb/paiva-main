@@ -7,6 +7,8 @@ import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css'; 
 import { chatService } from '../services/chatService';
+import { assistantService } from '../services/assistantService';
+import type { AssistantModel } from '../services/assistantService';
 import { useChat } from '../context/ChatContext';
 import WikipediaImage from './WikipediaImage';
 import { fetchWithAuth } from '../services/api';
@@ -25,18 +27,19 @@ const extractText = (node: React.ReactNode): string => {
   return '';
 };
 
-const ModelDropdown = ({ value, onChange }: { value: string, onChange: (v: string) => void }) => {
+const FALLBACK_MODELS: AssistantModel[] = [
+  { id: '', name: 'Auto (Default)', capability: 'Uses your configured default model' },
+  { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B', capability: 'Strong general reasoning' },
+  { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B', capability: 'Fast everyday help' },
+  { id: 'deepseek-r1-distill-llama-70b', name: 'DeepSeek R1 70B', capability: 'Reasoning-heavy tasks' },
+  { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B', capability: 'Balanced long-context work' },
+  { id: 'gemma2-9b-it', name: 'Google Gemma 2 9B', capability: 'Concise instruction following' },
+  { id: 'qwen-2.5-32b', name: 'Qwen 2.5 32B', capability: 'Research and synthesis' },
+  { id: 'qwen-2.5-coder-32b', name: 'Qwen 2.5 Coder 32B', capability: 'Coding assistance' }
+];
+
+const ModelDropdown = ({ value, onChange, models }: { value: string, onChange: (v: string) => void, models: AssistantModel[] }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const models = [
-    { id: '', name: 'Auto (Default)' },
-    { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B (Smartest)' },
-    { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B (Fastest)' },
-    { id: 'deepseek-r1-distill-llama-70b', name: 'DeepSeek R1 70B (Reasoning)' },
-    { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B (Balanced)' },
-    { id: 'gemma2-9b-it', name: 'Google Gemma 2 9B' },
-    { id: 'qwen-2.5-32b', name: 'Qwen 2.5 32B' },
-    { id: 'qwen-2.5-coder-32b', name: 'Qwen 2.5 Coder 32B' }
-  ];
   const selected = models.find(m => m.id === value) || models[0];
 
   return (
@@ -64,7 +67,10 @@ const ModelDropdown = ({ value, onChange }: { value: string, onChange: (v: strin
                 )}
               >
                 {value === m.id && <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />}
-                <span className={cn(value !== m.id && "ml-3.5")}>{m.name}</span>
+                <span className={cn("min-w-0", value !== m.id && "ml-3.5")}>
+                  <span className="block truncate">{m.name}</span>
+                  <span className="block truncate text-[10px] font-normal text-muted-foreground">{m.capability}</span>
+                </span>
               </button>
             ))}
           </div>
@@ -139,6 +145,7 @@ export default function ChatArea({ isSecondary = false }: { isSecondary?: boolea
   const [isTyping, setIsTyping] = useState(false);
   const [contextImageEnabled, setContextImageEnabled] = useState(false);
   const [aiModel, setAiModel] = useState('');
+  const [assistantModels, setAssistantModels] = useState<AssistantModel[]>(FALLBACK_MODELS);
   const [aiVoice, setAiVoice] = useState<string>(() => localStorage.getItem('aiVoice') || '');
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [attachedDocumentText, setAttachedDocumentText] = useState<string | null>(null);
@@ -205,6 +212,14 @@ export default function ChatArea({ isSecondary = false }: { isSecondary?: boolea
   };
 
   useEffect(() => {
+    assistantService.getModels()
+      .then(models => {
+        if (models.length > 0) {
+          setAssistantModels(models);
+        }
+      })
+      .catch(err => console.error('Failed to load assistant models:', err));
+
     // Load voices for TTS
     const loadVoices = () => {
       const voices = window.speechSynthesis.getVoices();
@@ -597,7 +612,7 @@ export default function ChatArea({ isSecondary = false }: { isSecondary?: boolea
             <span className="hidden sm:inline">Export</span>
           </button>
 
-          <ModelDropdown value={aiModel} onChange={setAiModel} />
+          <ModelDropdown value={aiModel} onChange={setAiModel} models={assistantModels} />
           <VoiceDropdown value={aiVoice} onChange={setAiVoice} availableVoices={availableVoices} />
 
           {/* Status dot */}
