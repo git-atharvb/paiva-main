@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from './ui/Button';
-import { Send, Sparkles, Square, Copy, CheckCircle2, Paperclip, X, Image as ImageIcon, Link as LinkIcon, Mic, MicOff, Volume2, VolumeX, MonitorPlay, Download, ChevronDown, ArrowRight, FileText, Loader2 } from 'lucide-react';
+import { Send, Sparkles, Square, Copy, CheckCircle2, Paperclip, X, Image as ImageIcon, Link as LinkIcon, Mic, MicOff, Volume2, VolumeX, MonitorPlay, Download, ChevronDown, ArrowRight, FileText, Loader2, Radio } from 'lucide-react';
 import { cn } from '../lib/utils';
+import VoiceChatMode from './VoiceChatMode';
 import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -158,6 +159,7 @@ export default function ChatArea({ isSecondary = false }: { isSecondary?: boolea
   const [isRecording, setIsRecording] = useState(false);
   const [userLocation, setUserLocation] = useState<string | null>(null);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
+  const [showVoiceMode, setShowVoiceMode] = useState(false);
   
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -620,6 +622,15 @@ export default function ChatArea({ isSecondary = false }: { isSecondary?: boolea
             <span className="size-2 rounded-full bg-emerald-400 dark:bg-emerald-300 shadow-[0_0_5px_oklch(0.70_0.19_155/0.7)] animate-pulse" />
             Online
           </span>
+          <button
+            type="button"
+            onClick={() => setShowVoiceMode(true)}
+            className="ml-2 text-primary hover:text-primary/80 transition-colors p-1.5 rounded-lg flex items-center gap-1.5 text-xs font-bold border border-primary/20 bg-primary/10 hover:bg-primary/20"
+            title="Continuous Voice Mode"
+          >
+            <Radio size={14} className="animate-pulse" />
+            <span className="hidden sm:inline">Voice Mode</span>
+          </button>
           {isSecondary && (
             <button
               type="button"
@@ -1082,6 +1093,13 @@ export default function ChatArea({ isSecondary = false }: { isSecondary?: boolea
           </Button>
         )}
       </form>
+
+      {showVoiceMode && (
+        <VoiceChatMode
+          conversationId={activeConversationId}
+          onClose={() => setShowVoiceMode(false)}
+        />
+      )}
     </div>
   );
 }

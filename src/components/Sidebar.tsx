@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { ClipboardList, MessageSquare, Settings, Plus, Trash, Pencil, Check, X as XIcon, SplitSquareHorizontal } from 'lucide-react';
+import { ClipboardList, MessageSquare, Settings, Plus, Trash, Pencil, Check, X as XIcon, SplitSquareHorizontal, FileText } from 'lucide-react';
 import paivaLogo from '../assets/paiva_logo.png';
 import { cn } from '../lib/utils';
 import { useChat } from '../context/ChatContext';
 import SettingsModal from './SettingsModal';
 import { chatService } from '../services/chatService';
 
-type WorkspaceView = 'chat' | 'todos';
+type WorkspaceView = 'chat' | 'todos' | 'notes';
 
 interface SidebarProps {
   activeView: WorkspaceView;
@@ -110,6 +110,7 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
         {[
           { id: 'chat' as const, label: 'Chat', icon: MessageSquare },
           { id: 'todos' as const, label: 'ToDo List', icon: ClipboardList },
+          { id: 'notes' as const, label: 'Smart Notes', icon: FileText },
         ].map((item) => {
           const Icon = item.icon;
           const isActive = activeView === item.id;

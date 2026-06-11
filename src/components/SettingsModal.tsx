@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Brain, Check, MessageSquareText, Save, Sparkles, ToggleLeft, ToggleRight, UserRound, X } from 'lucide-react';
+import { useGoogleLogin } from '@react-oauth/google';
+import toast from 'react-hot-toast';
+import { Brain, Check, MessageSquareText, Save, Sparkles, ToggleLeft, ToggleRight, UserRound, X, Calendar } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from './ui/Button';
 import { userService } from '../services/userService';
@@ -26,6 +28,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   responseStyle: 'Balanced',
   customInstructions: '',
   memoryEnabled: true,
+  calendarConnected: false,
 };
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
@@ -33,6 +36,20 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const { theme, setTheme } = useTheme();
+
+  const connectCalendar = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        await userService.updateSettings({ ...settings, googleAccessToken: tokenResponse.access_token });
+        setSettings(s => ({ ...s, calendarConnected: true, googleAccessToken: tokenResponse.access_token }));
+        toast.success("Google Calendar connected!");
+      } catch {
+        toast.error("Failed to save calendar connection.");
+      }
+    },
+    scope: 'https://www.googleapis.com/auth/calendar.readonly',
+    onError: () => toast.error('Google login failed'),
+  });
 
   useEffect(() => {
     if (isOpen && !isLoaded) {
@@ -198,6 +215,32 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </span>
               {settings.memoryEnabled && <Check size={18} className="text-primary shrink-0" />}
             </button>
+
+            {/* Google Calendar Section */}
+            <div className="flex items-center justify-between p-4 rounded-xl border border-border/40 bg-secondary/25 hover:border-primary/25 transition-all duration-200">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                  <Calendar size={20} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground">Google Calendar</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">Let PAIVA read your schedule and appointments.</p>
+                </div>
+              </div>
+              {settings.calendarConnected ? (
+                <div className="flex items-center gap-2 text-sm font-medium text-green-500 bg-green-500/10 px-3 py-1.5 rounded-lg border border-green-500/20">
+                  <Check size={16} /> Connected
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => connectCalendar()}
+                  className="px-4 py-2 bg-foreground text-background dark:bg-white/10 dark:text-foreground text-sm font-semibold rounded-lg hover:bg-primary hover:text-primary-foreground transition-colors"
+                >
+                  Connect
+                </button>
+              )}
+            </div>
 
             <label className="block space-y-2">
               <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">

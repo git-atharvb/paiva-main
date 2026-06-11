@@ -36,7 +36,14 @@ const createStorageKey = (userEmail?: string) => `paiva.todos.${userEmail || 'lo
 
 export default function TodoList({ userEmail }: TodoListProps) {
   const storageKey = createStorageKey(userEmail);
-  const [tasks, setTasks] = useState<TodoItem[]>([]);
+  const [tasks, setTasks] = useState<TodoItem[]>(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
   const [filter, setFilter] = useState<TodoFilter>('all');
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
@@ -45,12 +52,19 @@ export default function TodoList({ userEmail }: TodoListProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(storageKey);
-      setTasks(raw ? JSON.parse(raw) : []);
-    } catch {
-      setTasks([]);
-    }
+    const handleStorageChange = () => {
+      try {
+        const raw = localStorage.getItem(storageKey);
+        setTasks(raw ? JSON.parse(raw) : []);
+      } catch {
+        setTasks([]);
+      }
+    };
+    
+    // In case storageKey changes or we want to listen to external changes
+    handleStorageChange();
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, [storageKey]);
 
   useEffect(() => {

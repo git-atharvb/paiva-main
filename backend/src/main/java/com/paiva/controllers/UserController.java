@@ -38,6 +38,7 @@ public class UserController {
             response.put("aboutUser", nullToEmpty(user.getAboutUser()));
             response.put("responseStyle", nullToEmpty(user.getResponseStyle()));
             response.put("memoryEnabled", String.valueOf(user.isMemoryEnabled()));
+            response.put("calendarConnected", String.valueOf(user.getGoogleAccessToken() != null && !user.getGoogleAccessToken().isBlank()));
             return ResponseEntity.ok(response);
         }
         return ResponseEntity.badRequest().body("Error: User not found.");
@@ -57,6 +58,12 @@ public class UserController {
             user.setResponseStyle(normalizeResponseStyle(request.getResponseStyle()));
             if (request.getMemoryEnabled() != null) {
                 user.setMemoryEnabled(request.getMemoryEnabled());
+            }
+            if (request.getGoogleAccessToken() != null) {
+                user.setGoogleAccessToken(request.getGoogleAccessToken());
+            }
+            if (request.getGoogleRefreshToken() != null) {
+                user.setGoogleRefreshToken(request.getGoogleRefreshToken());
             }
             userRepository.save(user);
             return ResponseEntity.ok("User settings updated successfully!");

@@ -11,9 +11,11 @@ import org.springframework.web.server.ResponseStatusException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paiva.model.Conversation;
 import com.paiva.model.Message;
+import com.paiva.model.Note;
 import com.paiva.model.User;
 import com.paiva.repository.ConversationRepository;
 import com.paiva.repository.MessageRepository;
+import com.paiva.repository.NoteRepository;
 
 import reactor.core.publisher.Flux;
 
@@ -27,6 +29,8 @@ public class ChatService {
     private final WebSearchService webSearchService;
     private final YouTubeTranscriptService youTubeTranscriptService;
     private final MemoryService memoryService;
+    private final NoteRepository noteRepository;
+    private final GoogleCalendarService googleCalendarService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @org.springframework.beans.factory.annotation.Value("${spring.ai.openai.api-key}")
@@ -43,7 +47,9 @@ public class ChatService {
                        com.paiva.repository.UserRepository userRepository,
                        WebSearchService webSearchService,
                        YouTubeTranscriptService youTubeTranscriptService,
-                       MemoryService memoryService) {
+                       MemoryService memoryService,
+                       NoteRepository noteRepository,
+                       GoogleCalendarService googleCalendarService) {
                            
         this.conversationRepository = conversationRepository;
         this.messageRepository = messageRepository;
@@ -51,6 +57,8 @@ public class ChatService {
         this.webSearchService = webSearchService;
         this.youTubeTranscriptService = youTubeTranscriptService;
         this.memoryService = memoryService;
+        this.noteRepository = noteRepository;
+        this.googleCalendarService = googleCalendarService;
     }
 
     public Conversation createOrGetConversation(String conversationId, String userId, String firstMessage) {
@@ -136,6 +144,15 @@ public class ChatService {
             systemPrompt += "\n\nLONG-TERM MEMORY (Summary of older messages in this chat):\n" + longTermSummary + "\n";
         }
 
+        // Smart Notes Knowledge Base Injection
+        List<Note> userNotes = noteRepository.findByUserIdOrderByUpdatedAtDesc(userId);
+        if (userNotes != null && !userNotes.isEmpty()) {
+            systemPrompt += "\n\nSMART NOTES (User's Personal Knowledge Base):\n";
+            for (Note note : userNotes) {
+                systemPrompt += "- **" + note.getTitle() + "**\n" + note.getContent() + "\n\n";
+            }
+        }
+
         // URL Scraping Injection
         java.util.regex.Matcher urlMatcher = java.util.regex.Pattern.compile("https?://[^\\s]+").matcher(userMessageText);
         while (urlMatcher.find()) {
@@ -178,6 +195,13 @@ public class ChatService {
         // Inject Location Context
         if (userLocation != null && !userLocation.isBlank()) {
             systemPrompt += "\n\nUSER LOCATION CONTEXT:\nThe user is currently located in: " + userLocation + ".\nIf they ask for local information (weather, places, etc.), use this location.\n";
+        }
+
+        // Google Calendar Injection
+        boolean needsCalendar = userMessageText.matches("(?i).*\\b(calendar|schedule|meeting|meetings|events|appointments|agenda)\\b.*");
+        if (needsCalendar && user != null && user.getGoogleAccessToken() != null && !user.getGoogleAccessToken().isBlank()) {
+            String calendarData = googleCalendarService.getUpcomingEvents(user.getGoogleAccessToken());
+            systemPrompt += "\n\nCRITICAL CALENDAR CONTEXT:\nThe user asked about their schedule or calendar. Here are their upcoming Google Calendar events:\n" + calendarData + "\nUse this to answer their question.\n";
         }
 
         // Live Web Search Injection

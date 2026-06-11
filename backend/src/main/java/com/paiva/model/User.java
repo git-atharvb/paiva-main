@@ -19,6 +19,9 @@ public class User {
     private AuthProvider provider = AuthProvider.LOCAL;
     private String providerId;
     
+    private String googleAccessToken;
+    private String googleRefreshToken;
+    
     private String customInstructions;
     private String assistantName = "PAIVA";
     private String aboutUser;
@@ -135,6 +138,22 @@ public class User {
 
     public void setProviderId(String providerId) {
         this.providerId = providerId;
+    }
+
+    public String getGoogleAccessToken() {
+        return googleAccessToken;
+    }
+
+    public void setGoogleAccessToken(String googleAccessToken) {
+        this.googleAccessToken = googleAccessToken;
+    }
+
+    public String getGoogleRefreshToken() {
+        return googleRefreshToken;
+    }
+
+    public void setGoogleRefreshToken(String googleRefreshToken) {
+        this.googleRefreshToken = googleRefreshToken;
     }
 
     public String getCustomInstructions() {
