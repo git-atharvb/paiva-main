@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, Check, Circle, ClipboardList, Clock3, Flag, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { CalendarDays, Check, Circle, ClipboardList, Clock3, Flag, Pencil, Plus, Trash2, X, Sparkles } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from './ui/Button';
 
@@ -21,15 +21,15 @@ interface TodoListProps {
 }
 
 const PRIORITY_STYLES: Record<TodoPriority, string> = {
-  low: 'text-emerald-600 bg-emerald-500/10 border-emerald-500/20',
-  medium: 'text-amber-600 bg-amber-500/10 border-amber-500/20',
-  high: 'text-rose-600 bg-rose-500/10 border-rose-500/20',
+  low: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]',
+  medium: 'text-amber-500 bg-amber-500/10 border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.1)]',
+  high: 'text-rose-500 bg-rose-500/10 border-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.1)]',
 };
 
 const FILTERS: Array<{ id: TodoFilter; label: string }> = [
-  { id: 'all', label: 'All' },
+  { id: 'all', label: 'All Tasks' },
   { id: 'active', label: 'Active' },
-  { id: 'completed', label: 'Done' },
+  { id: 'completed', label: 'Completed' },
 ];
 
 const createStorageKey = (userEmail?: string) => `paiva.todos.${userEmail || 'local'}`;
@@ -61,7 +61,6 @@ export default function TodoList({ userEmail }: TodoListProps) {
       }
     };
     
-    // In case storageKey changes or we want to listen to external changes
     handleStorageChange();
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
@@ -133,6 +132,7 @@ export default function TodoList({ userEmail }: TodoListProps) {
     setNotes(task.notes);
     setPriority(task.priority);
     setDueDate(task.dueDate);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const toggleTask = (id: string) => {
@@ -147,114 +147,144 @@ export default function TodoList({ userEmail }: TodoListProps) {
   };
 
   return (
-    <section className="h-full overflow-y-auto p-5 md:p-6 text-foreground">
-      <div className="max-w-6xl mx-auto space-y-5">
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+    <section className="h-full overflow-y-auto p-4 md:p-6 text-foreground magical-scrollbar">
+      <div className="w-full space-y-6">
+        
+        {/* ── Header Area ──────────────────────────────────────── */}
+        <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-8 relative z-10">
           <div>
-            <div className="flex items-center gap-2 text-primary text-sm font-bold tracking-wide mb-2">
-              <ClipboardList size={18} />
-              PAIVA Planner
+            <div className="inline-flex items-center justify-center p-3 bg-emerald-500/10 text-emerald-500 rounded-2xl mb-4 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
+              <ClipboardList size={24} strokeWidth={2.5} />
             </div>
-            <h1 className="text-3xl font-black tracking-tight">ToDo List</h1>
-            <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
-              Capture tasks, prioritize the day, and keep your assistant workspace organized.
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter flex items-center gap-3 mb-2">
+              ToDo List
+              <Sparkles size={24} className="text-primary animate-pulse" />
+            </h1>
+            <p className="text-lg text-muted-foreground/80 max-w-2xl leading-relaxed">
+              Capture tasks, prioritize the day, and keep your PAIVA workspace fully organized.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 min-w-full lg:min-w-[420px]">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full xl:w-auto">
             {[
-              ['Total', stats.total],
-              ['Active', stats.active],
-              ['Done', stats.completed],
-              ['Overdue', stats.overdue],
-            ].map(([label, value]) => (
-              <div key={label} className="rounded-xl border border-border/40 bg-secondary/25 px-4 py-3">
-                <div className="text-xs text-muted-foreground font-semibold">{label}</div>
-                <div className="text-2xl font-black mt-1">{value}</div>
+              ['Total', stats.total, 'text-foreground/80'],
+              ['Active', stats.active, 'text-sky-500'],
+              ['Done', stats.completed, 'text-emerald-500'],
+              ['Overdue', stats.overdue, 'text-rose-500'],
+            ].map(([label, value, colorClass]) => (
+              <div key={label} className="glass-surface-subtle rounded-2xl border border-border/50 p-4 hover:-translate-y-1 transition-transform duration-300">
+                <div className="text-xs font-bold text-muted-foreground tracking-widest uppercase mb-1">{label}</div>
+                <div className={cn("text-3xl font-black tracking-tighter drop-shadow-sm", colorClass)}>{value}</div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="grid xl:grid-cols-[380px_1fr] gap-5">
-          <div className="rounded-2xl border border-border/45 bg-card/70 p-5 shadow-1">
-            <h2 className="text-sm font-bold mb-4 flex items-center gap-2">
-              {editingId ? <Pencil size={16} className="text-primary" /> : <Plus size={16} className="text-primary" />}
-              {editingId ? 'Edit Task' : 'Add Task'}
-            </h2>
+        {/* ── Main Content Grid ─────────────────────────────────── */}
+        <div className="grid xl:grid-cols-[340px_1fr] gap-6 xl:gap-8 min-w-0">
+          
+          {/* ── Add/Edit Task Form (Sticky on Desktop) ───────────── */}
+          <div className="xl:sticky top-0 h-max space-y-4 relative z-20">
+            <div className="glass-surface border border-border/50 rounded-[2rem] p-8 shadow-[0_20px_60px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.3)] backdrop-blur-3xl">
+              
+              <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/20 blur-3xl rounded-full pointer-events-none" />
+              
+              <h2 className="text-xl font-black tracking-tight mb-6 flex items-center gap-3">
+                <div className="bg-primary/20 text-primary p-2 rounded-xl">
+                  {editingId ? <Pencil size={18} strokeWidth={3} /> : <Plus size={18} strokeWidth={3} />}
+                </div>
+                {editingId ? 'Edit Task' : 'New Task'}
+              </h2>
 
-            <div className="space-y-3">
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') saveTask(); }}
-                placeholder="What needs to get done?"
-                className="w-full frosted-input rounded-xl px-4 py-3 text-sm font-medium outline-none"
-              />
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Notes, links, context..."
-                className="w-full h-24 frosted-input rounded-xl px-4 py-3 text-sm outline-none resize-none"
-              />
+              <div className="space-y-5 relative z-10">
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') saveTask(); }}
+                  placeholder="What needs to get done?"
+                  className="w-full bg-background border border-border/60 rounded-2xl px-5 py-4 text-[15px] font-bold tracking-wide outline-none focus:border-primary focus:shadow-[0_0_0_4px_rgba(var(--primary),0.1)] transition-all duration-300 placeholder:font-medium placeholder:text-muted-foreground/40"
+                />
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Add notes, links, context..."
+                  className="w-full h-32 bg-background border border-border/60 rounded-2xl px-5 py-4 text-sm font-medium outline-none resize-none focus:border-primary focus:shadow-[0_0_0_4px_rgba(var(--primary),0.1)] transition-all duration-300 placeholder:text-muted-foreground/40 magical-scrollbar"
+                />
 
-              <div className="grid grid-cols-3 gap-2">
-                {(['low', 'medium', 'high'] as TodoPriority[]).map(item => (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={() => setPriority(item)}
+                <div className="grid grid-cols-3 gap-3">
+                  {(['low', 'medium', 'high'] as TodoPriority[]).map(item => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => setPriority(item)}
+                      className={cn(
+                        'rounded-xl border px-3 py-2.5 text-[13px] font-bold capitalize transition-all duration-300',
+                        priority === item
+                          ? PRIORITY_STYLES[item]
+                          : 'border-border/40 bg-secondary/30 text-muted-foreground hover:text-foreground hover:bg-secondary/60 hover:scale-105 active:scale-95'
+                      )}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+
+                <label className="flex items-center gap-3 bg-background border border-border/60 rounded-2xl px-5 py-3.5 text-sm font-bold transition-all focus-within:border-primary focus-within:shadow-[0_0_0_4px_rgba(var(--primary),0.1)] cursor-pointer">
+                  <CalendarDays size={18} className="text-primary" />
+                  <input
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    className="bg-transparent outline-none flex-1 text-foreground cursor-pointer"
+                  />
+                </label>
+
+                <div className="flex gap-3 pt-4">
+                  {editingId && (
+                    <Button type="button" onClick={resetForm} className="bg-secondary text-foreground hover:bg-secondary/80 flex-1 py-4 rounded-2xl font-bold tracking-wide transition-all hover:-translate-y-1 active:scale-95 border border-border/40">
+                      Cancel
+                    </Button>
+                  )}
+                  <Button 
+                    type="button" 
+                    onClick={saveTask} 
+                    disabled={!title.trim()} 
                     className={cn(
-                      'rounded-xl border px-3 py-2 text-xs font-bold capitalize transition-all',
-                      priority === item
-                        ? PRIORITY_STYLES[item]
-                        : 'border-border/40 bg-secondary/25 text-muted-foreground hover:text-foreground'
+                      "flex-1 gap-2 py-4 rounded-2xl font-bold tracking-wide transition-all shadow-[0_8px_20px_rgba(var(--primary),0.2)]",
+                      "hover:-translate-y-1 active:scale-95",
+                      editingId ? "" : "col-span-2",
+                      !title.trim() ? "opacity-50 hover:translate-y-0" : "bg-gradient-to-r from-primary to-primary/80"
                     )}
                   >
-                    {item}
-                  </button>
-                ))}
-              </div>
-
-              <label className="flex items-center gap-2 frosted-input rounded-xl px-4 py-3 text-sm">
-                <CalendarDays size={16} className="text-muted-foreground" />
-                <input
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  className="bg-transparent outline-none flex-1 text-foreground"
-                />
-              </label>
-
-              <div className="flex gap-2 pt-1">
-                <Button type="button" variant="primary" onClick={saveTask} disabled={!title.trim()} className="flex-1 gap-2">
-                  {editingId ? <Check size={16} /> : <Plus size={16} />}
-                  {editingId ? 'Save Task' : 'Add Task'}
-                </Button>
-                {editingId && (
-                  <Button type="button" variant="ghost" onClick={resetForm} size="icon" aria-label="Cancel edit">
-                    <X size={16} />
+                    {editingId ? <Check size={18} strokeWidth={2.5} /> : <Plus size={18} strokeWidth={2.5} />}
+                    {editingId ? 'Update' : 'Add Task'}
                   </Button>
-                )}
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border/45 bg-card/55 p-5 shadow-1 min-h-[520px]">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-              <h2 className="text-sm font-bold flex items-center gap-2">
-                <Clock3 size={16} className="text-primary" />
+          {/* ── Task Queue ───────────────────────────────────────── */}
+          <div className="glass-surface-subtle border border-border/40 rounded-[2.5rem] p-6 sm:p-8 min-h-[500px] flex flex-col relative z-10 shadow-[0_10px_40px_rgba(0,0,0,0.05)] min-w-0">
+            
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8 border-b border-border/40 pb-6">
+              <h2 className="text-2xl font-black tracking-tight flex items-center gap-3">
+                <Clock3 size={24} className="text-primary" strokeWidth={2.5} />
                 Task Queue
               </h2>
-              <div className="flex rounded-xl border border-border/40 bg-secondary/25 p-1">
+              
+              {/* Filters */}
+              <div className="flex rounded-2xl border border-border/50 bg-secondary/30 p-1.5 backdrop-blur-sm shadow-inner">
                 {FILTERS.map(item => (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => setFilter(item.id)}
                     className={cn(
-                      'px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
-                      filter === item.id ? 'bg-primary text-primary-foreground shadow-neon-sm' : 'text-muted-foreground hover:text-foreground'
+                      'px-5 py-2.5 rounded-xl text-[13px] font-bold tracking-wide transition-all duration-300',
+                      filter === item.id 
+                        ? 'bg-foreground text-background shadow-md scale-105' 
+                        : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
                     )}
                   >
                     {item.label}
@@ -264,71 +294,103 @@ export default function TodoList({ userEmail }: TodoListProps) {
             </div>
 
             {visibleTasks.length === 0 ? (
-              <div className="h-[420px] flex flex-col items-center justify-center text-center rounded-xl border border-dashed border-border/50 bg-secondary/15">
-                <ClipboardList size={44} className="text-muted-foreground/50 mb-4" />
-                <div className="text-lg font-bold">No tasks here</div>
-                <p className="text-sm text-muted-foreground mt-2 max-w-sm">
-                  Add a task to turn PAIVA into your daily planning cockpit.
+              <div className="flex-1 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-700 opacity-50">
+                <div className="size-24 rounded-full bg-secondary/50 flex items-center justify-center mb-6 shadow-inner">
+                  <ClipboardList size={36} className="text-muted-foreground" />
+                </div>
+                <div className="text-2xl font-black tracking-tight mb-2">Queue is empty</div>
+                <p className="text-base text-muted-foreground max-w-sm font-medium leading-relaxed">
+                  {filter === 'completed' ? "You haven't completed any tasks yet." : 
+                   filter === 'active' ? "You're all caught up! Take a break." : 
+                   "Add a task to turn PAIVA into your daily planning cockpit."}
                 </p>
               </div>
             ) : (
-              <div className="space-y-2">
-                {visibleTasks.map(task => (
+              <div className="space-y-4">
+                {visibleTasks.map((task, idx) => (
                   <article
                     key={task.id}
                     className={cn(
-                      'group rounded-xl border border-border/40 bg-secondary/20 p-4 transition-all hover:border-primary/25 hover:bg-secondary/30',
-                      task.completed && 'opacity-65'
+                      'group rounded-3xl border p-5 transition-all duration-500 ease-out relative overflow-hidden',
+                      task.completed 
+                        ? 'border-border/30 bg-secondary/10 opacity-60 grayscale-[50%]' 
+                        : 'border-border/60 bg-card/60 hover:bg-card/90 hover:border-primary/40 hover:shadow-[0_10px_30px_rgba(0,0,0,0.1)] hover:-translate-y-1'
                     )}
+                    style={{ animation: `slide-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) ${idx * 50}ms both` }}
                   >
-                    <div className="flex items-start gap-3">
+                    {/* Completion glow flash behind card */}
+                    <div className={cn(
+                      "absolute inset-0 bg-primary/20 opacity-0 transition-opacity duration-1000 pointer-events-none rounded-3xl",
+                      task.completed && "animate-[pulse-fade_1s_ease-out]"
+                    )} />
+
+                    <div className="flex items-start gap-4 relative z-10">
                       <button
                         type="button"
                         onClick={() => toggleTask(task.id)}
                         className={cn(
-                          'mt-0.5 size-7 rounded-full flex items-center justify-center border transition-all shrink-0',
-                          task.completed ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:border-primary text-muted-foreground'
+                          'mt-1 size-8 rounded-full flex items-center justify-center border-2 transition-all duration-300 shrink-0 shadow-sm active:scale-90 hover:scale-110',
+                          task.completed 
+                            ? 'bg-primary border-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary),0.5)]' 
+                            : 'border-muted-foreground/30 hover:border-primary text-transparent hover:text-primary/30'
                         )}
                         aria-label={task.completed ? 'Mark task active' : 'Mark task complete'}
                       >
-                        {task.completed ? <Check size={15} /> : <Circle size={15} />}
+                        <Check size={16} strokeWidth={3} />
                       </button>
+                      
                       <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className={cn('font-bold text-sm break-words', task.completed && 'line-through text-muted-foreground')}>
+                        <div className="flex flex-wrap items-center gap-3 mb-2">
+                          <h3 className={cn(
+                            'font-bold text-[16px] break-words tracking-wide transition-all duration-300', 
+                            task.completed ? 'line-through text-muted-foreground' : 'text-foreground'
+                          )}>
                             {task.title}
                           </h3>
-                          <span className={cn('inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-bold capitalize', PRIORITY_STYLES[task.priority])}>
-                            <Flag size={11} /> {task.priority}
+                          <span className={cn(
+                            'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold capitalize transition-all duration-300', 
+                            task.completed ? 'grayscale opacity-50' : '',
+                            PRIORITY_STYLES[task.priority]
+                          )}>
+                            <Flag size={12} strokeWidth={2.5} /> {task.priority}
                           </span>
                           {task.dueDate && (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-border/40 bg-card/50 px-2 py-0.5 text-[11px] text-muted-foreground">
-                              <CalendarDays size={11} /> {task.dueDate}
+                            <span className={cn(
+                              "inline-flex items-center gap-1.5 rounded-full border border-border/40 bg-background/50 px-2.5 py-1 text-[11px] font-bold tracking-wide",
+                              task.completed ? 'opacity-50' : 'text-muted-foreground'
+                            )}>
+                              <CalendarDays size={12} strokeWidth={2.5} /> {task.dueDate}
                             </span>
                           )}
                         </div>
+                        
                         {task.notes && (
-                          <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap break-words">
+                          <p className={cn(
+                            "text-[14px] leading-relaxed mt-2 whitespace-pre-wrap break-words transition-all duration-300",
+                            task.completed ? 'text-muted-foreground/50' : 'text-muted-foreground/90'
+                          )}>
                             {task.notes}
                           </p>
                         )}
                       </div>
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+
+                      <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0 bg-background/50 backdrop-blur-md rounded-2xl p-1.5 border border-border/50 shadow-sm shrink-0">
                         <button
                           type="button"
                           onClick={() => startEdit(task)}
-                          className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-secondary/50"
+                          className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/20 transition-all duration-200"
                           aria-label="Edit task"
                         >
-                          <Pencil size={15} />
+                          <Pencil size={16} strokeWidth={2.5} />
                         </button>
+                        <div className="w-px h-5 bg-border/60 mx-0.5" />
                         <button
                           type="button"
                           onClick={() => deleteTask(task.id)}
-                          className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                          className="p-2 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/20 transition-all duration-200"
                           aria-label="Delete task"
                         >
-                          <Trash2 size={15} />
+                          <Trash2 size={16} strokeWidth={2.5} />
                         </button>
                       </div>
                     </div>

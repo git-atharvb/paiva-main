@@ -7,6 +7,7 @@ import ChatArea from './components/ChatArea'
 import TodoList from './components/TodoList'
 import NotesList from './components/NotesList'
 import EmailList from './components/EmailList'
+import SettingsView from './components/SettingsView'
 import { DashboardLayout } from './components/layout/DashboardLayout'
 import { ChatProvider } from './context/ChatContext'
 
@@ -14,7 +15,7 @@ import { useChat } from './context/ChatContext'
 
 import HomeDashboard from './components/HomeDashboard'
 
-type DashboardView = 'home' | 'chat' | 'todos' | 'notes' | 'emails';
+type DashboardView = 'home' | 'chat' | 'todos' | 'notes' | 'emails' | 'settings';
 
 function DashboardContent({ user, handleLogout }: { user: { name?: string; email?: string } | null, handleLogout: () => void }) {
   const { secondaryConversationId } = useChat();
@@ -33,6 +34,8 @@ function DashboardContent({ user, handleLogout }: { user: { name?: string; email
         <NotesList />
       ) : activeView === 'emails' ? (
         <EmailList />
+      ) : activeView === 'settings' ? (
+        <SettingsView />
       ) : secondaryConversationId ? (
         <div className="flex w-full h-full gap-4">
           <div className="flex-1 min-w-0">
