@@ -10,4 +10,5 @@ import java.util.List;
 public interface MessageRepository extends MongoRepository<Message, String> {
     List<Message> findByConversationIdOrderByTimestampAsc(String conversationId);
     void deleteByConversationId(String conversationId);
+    List<Message> findTop10ByOrderByTimestampDesc();
 }

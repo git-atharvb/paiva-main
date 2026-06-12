@@ -47,7 +47,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         toast.error("Failed to save calendar connection.");
       }
     },
-    scope: 'https://www.googleapis.com/auth/calendar.readonly',
+    scope: 'https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/gmail.modify',
     onError: () => toast.error('Google login failed'),
   });
 

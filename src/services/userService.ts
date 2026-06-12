@@ -8,6 +8,7 @@ export interface UserSettings {
   memoryEnabled: boolean;
   googleAccessToken?: string;
   calendarConnected?: boolean;
+  provider?: string;
 }
 
 interface UserSettingsResponse {
@@ -18,6 +19,7 @@ interface UserSettingsResponse {
   memoryEnabled?: boolean | string;
   googleAccessToken?: string;
   calendarConnected?: boolean | string;
+  provider?: string;
 }
 
 export const userService = {
@@ -31,7 +33,8 @@ export const userService = {
       aboutUser: data.aboutUser || '',
       responseStyle: data.responseStyle || 'Balanced',
       memoryEnabled: data.memoryEnabled === undefined ? true : data.memoryEnabled === true || data.memoryEnabled === 'true',
-      calendarConnected: data.calendarConnected === true || data.calendarConnected === 'true'
+      calendarConnected: data.calendarConnected === true || data.calendarConnected === 'true',
+      provider: data.provider || 'LOCAL'
     };
   },
 

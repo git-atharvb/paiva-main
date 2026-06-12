@@ -39,6 +39,7 @@ public class UserController {
             response.put("responseStyle", nullToEmpty(user.getResponseStyle()));
             response.put("memoryEnabled", String.valueOf(user.isMemoryEnabled()));
             response.put("calendarConnected", String.valueOf(user.getGoogleAccessToken() != null && !user.getGoogleAccessToken().isBlank()));
+            response.put("provider", user.getProvider().name());
             return ResponseEntity.ok(response);
         }
         return ResponseEntity.badRequest().body("Error: User not found.");
