@@ -23,11 +23,19 @@ type DashboardView = 'home' | 'chat' | 'todos' | 'notes' | 'emails' | 'calculato
 function DashboardContent({ user, handleLogout }: { user: { name?: string; email?: string } | null, handleLogout: () => void }) {
   const { secondaryConversationId } = useChat();
   const [activeView, setActiveView] = useState<DashboardView>('home');
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  const handleViewChange = (view: DashboardView) => {
+    setActiveView(view);
+    setIsMobileSidebarOpen(false); // Close drawer on mobile after clicking
+  };
 
   return (
     <DashboardLayout
-      header={<Header userName={user?.name} onLogout={handleLogout} onOpenAbout={() => setActiveView('about')} />}
-      sidebar={<Sidebar activeView={activeView} onViewChange={setActiveView} />}
+      isMobileSidebarOpen={isMobileSidebarOpen}
+      onCloseMobileSidebar={() => setIsMobileSidebarOpen(false)}
+      header={<Header userName={user?.name} onLogout={handleLogout} onOpenAbout={() => setActiveView('about')} onToggleMobileSidebar={() => setIsMobileSidebarOpen(prev => !prev)} />}
+      sidebar={<Sidebar activeView={activeView} onViewChange={handleViewChange} />}
     >
       {activeView === 'home' ? (
         <HomeDashboard user={user} onNavigate={setActiveView} />

@@ -6,9 +6,11 @@ interface DashboardLayoutProps {
   header: ReactNode;
   sidebar: ReactNode;
   children: ReactNode;
+  isMobileSidebarOpen?: boolean;
+  onCloseMobileSidebar?: () => void;
 }
 
-export function DashboardLayout({ header, sidebar, children }: DashboardLayoutProps) {
+export function DashboardLayout({ header, sidebar, children, isMobileSidebarOpen, onCloseMobileSidebar }: DashboardLayoutProps) {
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     const saved = localStorage.getItem('sidebarWidth');
     return saved ? parseInt(saved, 10) : 288;
@@ -58,10 +60,22 @@ export function DashboardLayout({ header, sidebar, children }: DashboardLayoutPr
         style={{ background: 'radial-gradient(circle, oklch(0.56 0.260 280 / 0.25), transparent 70%)' }}
       />
 
-      {/* ── Floating Sidebar (bento box) ─────────────────────────────── */}
+      {/* ── Mobile Sidebar Overlay ────────────────────────────────────── */}
+      {isMobileSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 md:hidden animate-in fade-in duration-300"
+          onClick={onCloseMobileSidebar}
+        />
+      )}
+
+      {/* ── Sidebar (desktop & mobile) ─────────────────────────────── */}
       <div 
         className={cn(
-          "hidden md:flex relative p-4 shrink-0 z-10",
+          "fixed md:relative top-0 left-0 h-full p-4 shrink-0 z-50 md:z-10",
+          // Mobile state
+          "md:flex",
+          isMobileSidebarOpen ? "flex animate-in slide-in-from-left duration-300 shadow-2xl" : "hidden",
+          // Desktop resize transition
           !isResizing && "transition-[width] duration-300 ease-smooth"
         )}
         style={{ width: `${sidebarWidth}px` }}
@@ -71,15 +85,16 @@ export function DashboardLayout({ header, sidebar, children }: DashboardLayoutPr
             'w-full h-full rounded-3xl overflow-hidden',
             'glass-surface bg-noise',
             'transition-all duration-500 ease-smooth',
+            'border border-border/50',
             'hover:border-primary/25',
           )}
         >
           {sidebar}
         </div>
 
-        {/* ── Resize Handle ───────────────────────────────────────────── */}
+        {/* ── Resize Handle (Desktop Only) ─────────────────────────────── */}
         <div
-          className="absolute top-0 right-0 w-4 h-full cursor-col-resize z-50 flex items-center justify-center group"
+          className="hidden md:flex absolute top-0 right-0 w-4 h-full cursor-col-resize z-50 items-center justify-center group"
           onMouseDown={startResizing}
         >
           <div className={cn(

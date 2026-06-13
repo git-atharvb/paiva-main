@@ -1,26 +1,39 @@
 import { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { Button } from './ui/Button';
-import { Sun, Moon, LogOut, User, Info, X, Rocket, Code2, Heart } from 'lucide-react';
+import { Menu, Sun, Moon, LogOut, User, Info } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export default function Header({
   userName,
   onLogout,
   onOpenAbout,
+  onToggleMobileSidebar,
 }: {
   userName?: string;
   onLogout?: () => void;
   onOpenAbout?: () => void;
+  onToggleMobileSidebar?: () => void;
 }) {
   const { theme, toggleTheme } = useTheme();
 
   return (
     <>
+      {/* ── Mobile Menu Toggle ────────────────────────────────────── */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="md:hidden shrink-0 text-foreground"
+        onClick={onToggleMobileSidebar}
+        title="Open menu"
+      >
+        <Menu size={20} strokeWidth={2} />
+      </Button>
+
       {/* ── Brand wordmark ───────────────────────────────────────── */}
       <div
         className={cn(
-          'font-black text-xl tracking-tighter select-none hidden sm:block relative group',
+          'font-black text-xl tracking-tighter select-none hidden md:block relative group',
           'text-gradient-primary',
           'animate-in fade-in slide-in-from-left-4 duration-500',
         )}
