@@ -99,7 +99,7 @@ function App() {
       </button>
 
       {/* ── Auth card ────────────────────────────────────────────── */}
-      <div className="flex w-full justify-center relative z-10 animate-in fade-in zoom-in-95 duration-1000 ease-out">
+      <div className="flex flex-col items-center w-full justify-center relative z-10 animate-in fade-in zoom-in-95 duration-1000 ease-out">
         <AuthCard>
           {/* Logo */}
           <div className="flex justify-center mb-8 w-full animate-in fade-in zoom-in-75 duration-700 delay-100">

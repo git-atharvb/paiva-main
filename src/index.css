@@ -410,7 +410,22 @@
     line-height: 1.6;
     letter-spacing: -0.011em;          /* subtle tight tracking for dense UI */
     transition: background-color 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-                color 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+                color 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                font-size 0.3s ease;
+  }
+
+  /* Density specific base font sizes */
+  html[data-density='Compact'] body {
+    font-size: 0.875rem; /* 14px */
+  }
+  
+  html[data-density='Comfortable'] body {
+    font-size: 1rem; /* 16px */
+  }
+
+  html[data-density='Spacious'] body {
+    font-size: 1.125rem; /* 18px */
+    line-height: 1.7;
   }
 
   /* Headings: tighter tracking scales with size */
@@ -1055,4 +1070,16 @@
 .scroll-pill:hover {
   box-shadow: var(--shadow-3);
   transform: translateY(-2px);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   AUTOFILL OVERRIDE FIX
+   ───────────────────────────────────────────────────────────────────────────── */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+  transition: background-color 5000s ease-in-out 0s !important;
+  -webkit-text-fill-color: var(--color-foreground) !important;
+  caret-color: var(--color-foreground) !important;
 }

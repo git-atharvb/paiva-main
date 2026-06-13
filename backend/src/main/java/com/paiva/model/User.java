@@ -28,6 +28,17 @@ public class User {
     private String responseStyle = "Balanced";
     private boolean memoryEnabled = true;
 
+    private String aiModel = "paiva-core";
+    private Integer aiCreativity = 50;
+    private boolean autoPlayVoice = true;
+    private boolean uiSoundsEnabled = true;
+
+    private String currentFocus;
+    private String expertiseLevel = "Intermediate";
+    private String uiDensity = "Comfortable";
+    private String preferredLanguage = "English";
+    private String userDisplayName;
+
     @CreatedDate
     private Instant createdAt;
 
@@ -194,5 +205,77 @@ public class User {
 
     public void setMemoryEnabled(boolean memoryEnabled) {
         this.memoryEnabled = memoryEnabled;
+    }
+
+    public String getAiModel() {
+        return aiModel;
+    }
+
+    public void setAiModel(String aiModel) {
+        this.aiModel = aiModel;
+    }
+
+    public Integer getAiCreativity() {
+        return aiCreativity;
+    }
+
+    public void setAiCreativity(Integer aiCreativity) {
+        this.aiCreativity = aiCreativity;
+    }
+
+    public boolean isAutoPlayVoice() {
+        return autoPlayVoice;
+    }
+
+    public void setAutoPlayVoice(boolean autoPlayVoice) {
+        this.autoPlayVoice = autoPlayVoice;
+    }
+
+    public boolean isUiSoundsEnabled() {
+        return uiSoundsEnabled;
+    }
+
+    public void setUiSoundsEnabled(boolean uiSoundsEnabled) {
+        this.uiSoundsEnabled = uiSoundsEnabled;
+    }
+
+    public String getCurrentFocus() {
+        return currentFocus;
+    }
+
+    public void setCurrentFocus(String currentFocus) {
+        this.currentFocus = currentFocus;
+    }
+
+    public String getExpertiseLevel() {
+        return expertiseLevel;
+    }
+
+    public void setExpertiseLevel(String expertiseLevel) {
+        this.expertiseLevel = expertiseLevel;
+    }
+
+    public String getUiDensity() {
+        return uiDensity;
+    }
+
+    public void setUiDensity(String uiDensity) {
+        this.uiDensity = uiDensity;
+    }
+
+    public String getPreferredLanguage() {
+        return preferredLanguage;
+    }
+
+    public void setPreferredLanguage(String preferredLanguage) {
+        this.preferredLanguage = preferredLanguage;
+    }
+
+    public String getUserDisplayName() {
+        return userDisplayName;
+    }
+
+    public void setUserDisplayName(String userDisplayName) {
+        this.userDisplayName = userDisplayName;
     }
 }

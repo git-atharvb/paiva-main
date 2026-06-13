@@ -5,7 +5,7 @@ import { cn } from '../lib/utils';
 import { useChat } from '../context/ChatContext';
 import { chatService } from '../services/chatService';
 
-type WorkspaceView = 'home' | 'chat' | 'todos' | 'notes' | 'emails' | 'calculator' | 'settings';
+type WorkspaceView = 'home' | 'chat' | 'todos' | 'notes' | 'emails' | 'calculator' | 'settings' | 'about';
 
 interface SidebarProps {
   activeView: WorkspaceView;

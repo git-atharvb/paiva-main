@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from './ui/Button';
-import { Send, Sparkles, Square, Copy, CheckCircle2, Paperclip, X, Image as ImageIcon, Link as LinkIcon, Mic, MicOff, Volume2, VolumeX, MonitorPlay, Download, ChevronDown, ArrowRight, FileText, Loader2, Radio } from 'lucide-react';
+import { Send, Sparkles, Square, Copy, CheckCircle2, Paperclip, X, Image as ImageIcon, Link as LinkIcon, Mic, MicOff, Volume2, VolumeX, MonitorPlay, Download, ChevronDown, ArrowRight, FileText, Loader2, Radio, Wand2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import VoiceChatMode from './VoiceChatMode';
 import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
@@ -160,6 +160,7 @@ export default function ChatArea({ isSecondary = false }: { isSecondary?: boolea
   const [userLocation, setUserLocation] = useState<string | null>(null);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const [showVoiceMode, setShowVoiceMode] = useState(false);
+  const [isPolishing, setIsPolishing] = useState(false);
   
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -488,6 +489,38 @@ export default function ChatArea({ isSecondary = false }: { isSecondary?: boolea
       },
       controller.signal
     );
+  };
+
+  const handleMagicPolish = async () => {
+    if (!input.trim() || isPolishing) return;
+    setIsPolishing(true);
+    
+    try {
+      const response = await fetchWithAuth('/api/chat/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'paiva-fast',
+          messages: [{
+            role: 'user',
+            content: `You are an expert Prompt Engineer. Your task is to ENHANCE and POLISH the following user prompt. Expand on the ideas to add depth, make it more specific, and add relevant constraints so the AI generates the best possible response. Do NOT answer the prompt. Just output the improved prompt text directly without any quotes or explanations.\n\nOriginal Prompt:\n${input}`
+          }]
+        })
+      });
+      
+      if (!response.ok) throw new Error('Failed to polish prompt');
+      
+      const data = await response.json();
+      if (data.choices && data.choices.length > 0) {
+        setInput(data.choices[0].message.content.trim());
+        toast.success("Prompt polished!");
+      }
+    } catch (err) {
+      console.error('Magic polish error:', err);
+      toast.error('Failed to polish prompt');
+    } finally {
+      setIsPolishing(false);
+    }
   };
 
   const handleStop = () => {
@@ -896,7 +929,7 @@ export default function ChatArea({ isSecondary = false }: { isSecondary?: boolea
       </div>
 
       {/* ── Composer ─────────────────────────────────────────────── */}
-      <div className="relative pt-2 pb-1 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none sticky bottom-0 z-30">
+      <div className="relative pt-2 pb-1 pointer-events-none sticky bottom-0 z-30">
         <div className="pointer-events-auto">
           <form
             className="flex flex-col sm:flex-row gap-3 shrink-0 mx-auto max-w-5xl w-full min-w-0"
@@ -928,12 +961,12 @@ export default function ChatArea({ isSecondary = false }: { isSecondary?: boolea
           </div>
           
           {showUrlInput && (
-            <div className="absolute -top-16 left-0 bg-card/95 backdrop-blur-xl border border-border/45 p-2 rounded-xl shadow-2 flex gap-2 animate-in fade-in slide-in-from-bottom-2 z-10 w-80">
+            <div className="absolute -top-16 left-0 bg-card/95 backdrop-blur-xl border border-border/45 p-2 rounded-xl shadow-2 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 z-10 w-[360px]">
               <input 
                 ref={urlInputRef}
                 type="url" 
                 placeholder="https://..." 
-                className="flex-1 frosted-input rounded-lg px-3 py-1.5 text-sm"
+                className="flex-1 frosted-input rounded-lg px-3 py-1.5 text-sm min-w-0"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && urlInputRef.current?.value) {
                     setAttachedUrl(urlInputRef.current.value);
@@ -953,12 +986,12 @@ export default function ChatArea({ isSecondary = false }: { isSecondary?: boolea
           )}
 
           {showYoutubeInput && (
-            <div className="absolute -top-16 left-0 bg-card/95 backdrop-blur-xl border border-[#ff0000]/40 p-2 rounded-xl shadow-2 flex gap-2 animate-in fade-in slide-in-from-bottom-2 z-10 w-80">
+            <div className="absolute -top-16 left-0 bg-card/95 backdrop-blur-xl border border-[#ff0000]/40 p-2 rounded-xl shadow-2 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 z-10 w-[360px]">
               <input 
                 ref={youtubeInputRef}
                 type="url" 
                 placeholder="Paste YouTube Link..." 
-                className="flex-1 frosted-input rounded-lg px-3 py-1.5 text-sm"
+                className="flex-1 frosted-input rounded-lg px-3 py-1.5 text-sm min-w-0"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && youtubeInputRef.current?.value) {
                     setAttachedUrl(youtubeInputRef.current.value);
@@ -1039,6 +1072,22 @@ export default function ChatArea({ isSecondary = false }: { isSecondary?: boolea
               <MonitorPlay size={16} />
               <span className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-full mr-2 whitespace-nowrap bg-card text-foreground px-2 py-1 rounded-lg text-[11px] shadow-1 border border-border/40 pointer-events-none">
                 YouTube Link
+              </span>
+            </button>
+            
+            <button 
+              type="button" 
+              onClick={handleMagicPolish}
+              disabled={isPolishing || !input.trim()}
+              className={cn(
+                "p-1.5 rounded-lg transition-colors group relative", 
+                isPolishing ? "text-primary opacity-50" : "text-muted-foreground hover:bg-secondary/60 hover:text-primary",
+                !input.trim() && "opacity-30 cursor-not-allowed"
+              )}
+            >
+              {isPolishing ? <Loader2 className="animate-spin" size={16} /> : <Wand2 size={16} />}
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-full mr-2 whitespace-nowrap bg-card text-foreground px-2 py-1 rounded-lg text-[11px] shadow-1 border border-border/40 pointer-events-none">
+                {isPolishing ? "Polishing..." : "Magic Polish Prompt"}
               </span>
             </button>
             

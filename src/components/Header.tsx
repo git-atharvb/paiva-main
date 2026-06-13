@@ -1,14 +1,17 @@
+import { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { Button } from './ui/Button';
-import { Sun, Moon, LogOut, User } from 'lucide-react';
+import { Sun, Moon, LogOut, User, Info, X, Rocket, Code2, Heart } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export default function Header({
   userName,
   onLogout,
+  onOpenAbout,
 }: {
   userName?: string;
   onLogout?: () => void;
+  onOpenAbout?: () => void;
 }) {
   const { theme, toggleTheme } = useTheme();
 
@@ -51,6 +54,22 @@ export default function Header({
             <span className="size-2 rounded-full bg-emerald-400 dark:bg-emerald-300 shadow-[0_0_5px_oklch(0.70_0.19_155/0.7)] animate-pulse" />
           </div>
         )}
+
+        {/* About Button */}
+        <Button
+          variant="secondary"
+          size="icon"
+          onClick={onOpenAbout}
+          title="About PAIVA"
+          className={cn(
+            'rounded-full size-10',
+            'transition-all duration-300 ease-spring',
+            'hover:shadow-neon-sm hover:border-primary/35',
+            'text-muted-foreground hover:text-primary'
+          )}
+        >
+          <Info size={17} strokeWidth={2} />
+        </Button>
 
         {/* Theme toggle */}
         <Button

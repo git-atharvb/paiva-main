@@ -11,12 +11,14 @@ import SmartCalculator from './components/SmartCalculator'
 import SettingsView from './components/SettingsView'
 import { DashboardLayout } from './components/layout/DashboardLayout'
 import { ChatProvider } from './context/ChatContext'
+import { userService } from './services/userService'
 
 import { useChat } from './context/ChatContext'
 
 import HomeDashboard from './components/HomeDashboard'
+import AboutView from './components/AboutView'
 
-type DashboardView = 'home' | 'chat' | 'todos' | 'notes' | 'emails' | 'calculator' | 'settings';
+type DashboardView = 'home' | 'chat' | 'todos' | 'notes' | 'emails' | 'calculator' | 'settings' | 'about';
 
 function DashboardContent({ user, handleLogout }: { user: { name?: string; email?: string } | null, handleLogout: () => void }) {
   const { secondaryConversationId } = useChat();
@@ -24,7 +26,7 @@ function DashboardContent({ user, handleLogout }: { user: { name?: string; email
 
   return (
     <DashboardLayout
-      header={<Header userName={user?.name} onLogout={handleLogout} />}
+      header={<Header userName={user?.name} onLogout={handleLogout} onOpenAbout={() => setActiveView('about')} />}
       sidebar={<Sidebar activeView={activeView} onViewChange={setActiveView} />}
     >
       {activeView === 'home' ? (
@@ -39,6 +41,8 @@ function DashboardContent({ user, handleLogout }: { user: { name?: string; email
         <SmartCalculator />
       ) : activeView === 'settings' ? (
         <SettingsView />
+      ) : activeView === 'about' ? (
+        <AboutView />
       ) : secondaryConversationId ? (
         <div className="flex w-full h-full gap-4">
           <div className="flex-1 min-w-0">
@@ -80,6 +84,25 @@ export default function Dashboard() {
     toast.success('Thank you for using Paiva!')
     navigate('/')
   }
+
+  useEffect(() => {
+    if (!user) return;
+    
+    const applySettings = async () => {
+      try {
+        const settings = await userService.getSettings();
+        document.documentElement.setAttribute('data-density', settings.uiDensity || 'Comfortable');
+      } catch (err) {
+        console.error('Failed to load global settings', err);
+      }
+    };
+    
+    applySettings();
+    
+    const onSettingsUpdated = () => applySettings();
+    window.addEventListener('settingsUpdated', onSettingsUpdated);
+    return () => window.removeEventListener('settingsUpdated', onSettingsUpdated);
+  }, [user]);
 
   return (
     <ChatProvider>

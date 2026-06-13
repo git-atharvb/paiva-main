@@ -103,17 +103,32 @@ public class ChatService {
         String responseStyle = user != null && user.getResponseStyle() != null && !user.getResponseStyle().isBlank()
             ? user.getResponseStyle()
             : "Balanced";
+            
+        String currentFocus = user != null ? user.getCurrentFocus() : "";
+        String expertiseLevel = user != null && user.getExpertiseLevel() != null && !user.getExpertiseLevel().isBlank()
+            ? user.getExpertiseLevel() : "Intermediate";
+        String preferredLanguage = user != null && user.getPreferredLanguage() != null && !user.getPreferredLanguage().isBlank()
+            ? user.getPreferredLanguage() : "English";
+        String userDisplayName = user != null && user.getUserDisplayName() != null && !user.getUserDisplayName().isBlank()
+            ? user.getUserDisplayName() : "the user";
+
         boolean memoryEnabled = user == null || user.isMemoryEnabled();
 
         // Construct System Prompt
         String currentDate = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("MMMM d, yyyy"));
-        String systemPrompt = "You are " + assistantName + ", a highly advanced personalized AI virtual assistant for this user.\n"
+        String systemPrompt = "You are " + assistantName + ", a highly advanced personalized AI virtual assistant for " + userDisplayName + ".\n"
             + "Your product identity is PAIVA: Personalized AI Virtual Assistant.\n"
             + "Be helpful, concise, emotionally intelligent, and practical.\n"
-            + "The current date is " + currentDate + ". Keep this in mind when answering questions about current events.\n";
+            + "The current date is " + currentDate + ". Keep this in mind when answering questions about current events.\n"
+            + "You MUST communicate with the user in " + preferredLanguage + ", unless they explicitly ask otherwise.\n";
 
         systemPrompt += "\nPERSONALIZATION PROFILE:\n";
         systemPrompt += "- Preferred assistant name: " + assistantName + "\n";
+        systemPrompt += "- User's name: " + userDisplayName + "\n";
+        systemPrompt += "- User's expertise level: " + expertiseLevel + " (Adjust the technical depth and complexity of your answers accordingly)\n";
+        if (currentFocus != null && !currentFocus.isBlank()) {
+            systemPrompt += "- User's current focus / goal: " + currentFocus + " (Align your answers to this context when relevant)\n";
+        }
         systemPrompt += "- Response style: " + responseStyle + "\n";
         if (aboutUser != null && !aboutUser.isBlank()) {
             systemPrompt += "- What PAIVA knows about the user:\n" + aboutUser + "\n";
