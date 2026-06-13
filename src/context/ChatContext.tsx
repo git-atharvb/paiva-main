@@ -39,6 +39,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [secondaryMessages, setSecondaryMessages] = useState<ChatMessage[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isLoadingSecondaryHistory, setIsLoadingSecondaryHistory] = useState(false);
+  const [messageCache, setMessageCache] = useState<Record<string, ChatMessage[]>>({});
+
   const skipNextFetch = React.useRef(false);
   const skipNextSecondaryFetch = React.useRef(false);
 
@@ -67,6 +69,20 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     refreshConversations().then(() => {});
   }, [refreshConversations]);
 
+  // Sync active messages to cache
+  useEffect(() => {
+    if (activeConversationId && messages.length > 0 && messages[0].id !== 'welcome') {
+      setMessageCache(prev => ({ ...prev, [activeConversationId]: messages }));
+    }
+  }, [messages, activeConversationId]);
+
+  // Sync secondary messages to cache
+  useEffect(() => {
+    if (secondaryConversationId && secondaryMessages.length > 0) {
+      setMessageCache(prev => ({ ...prev, [secondaryConversationId]: secondaryMessages }));
+    }
+  }, [secondaryMessages, secondaryConversationId]);
+
   // Load messages when active conversation changes
   useEffect(() => {
     if (!activeConversationId) {
@@ -86,7 +102,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
 
     let isMounted = true;
-    setIsLoadingHistory(true);
+
+    // Optimistic cache load
+    if (messageCache[activeConversationId]) {
+      setMessages(messageCache[activeConversationId]);
+    } else {
+      setIsLoadingHistory(true);
+    }
 
     chatService.getMessages(activeConversationId)
       .then((apiMessages: ApiMessage[]) => {
@@ -97,10 +119,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           content: m.content
         }));
         setMessages(mapped);
+        setMessageCache(prev => ({ ...prev, [activeConversationId]: mapped }));
       })
       .catch(err => {
         console.error('Failed to load messages', err);
-        if (isMounted) toast.error('Failed to load conversation history');
+        if (isMounted && !messageCache[activeConversationId]) {
+          toast.error('Failed to load conversation history');
+        }
       })
       .finally(() => {
         if (isMounted) setIsLoadingHistory(false);
@@ -123,7 +148,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
 
     let isMounted = true;
-    setIsLoadingSecondaryHistory(true);
+
+    // Optimistic cache load
+    if (messageCache[secondaryConversationId]) {
+      setSecondaryMessages(messageCache[secondaryConversationId]);
+    } else {
+      setIsLoadingSecondaryHistory(true);
+    }
 
     chatService.getMessages(secondaryConversationId)
       .then((apiMessages: ApiMessage[]) => {
@@ -134,10 +165,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           content: m.content
         }));
         setSecondaryMessages(mapped);
+        setMessageCache(prev => ({ ...prev, [secondaryConversationId]: mapped }));
       })
       .catch(err => {
         console.error('Failed to load secondary messages', err);
-        if (isMounted) toast.error('Failed to load split view history');
+        if (isMounted && !messageCache[secondaryConversationId]) {
+          toast.error('Failed to load split view history');
+        }
       })
       .finally(() => {
         if (isMounted) setIsLoadingSecondaryHistory(false);
