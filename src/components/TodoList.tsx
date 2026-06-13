@@ -1,10 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, Check, Circle, ClipboardList, Clock3, Flag, Pencil, Plus, Trash2, X, Sparkles } from 'lucide-react';
+import { CalendarDays, Check, Circle, ClipboardList, Clock3, Flag, Pencil, Plus, Trash2, X, Sparkles, Loader2, Wand2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from './ui/Button';
+import { utilityService } from '../services/utilityService';
+import toast from 'react-hot-toast';
 
 type TodoPriority = 'low' | 'medium' | 'high';
 type TodoFilter = 'all' | 'active' | 'completed';
+
+interface TodoSubtask {
+  id: string;
+  title: string;
+  completed: boolean;
+}
 
 interface TodoItem {
   id: string;
@@ -14,6 +22,7 @@ interface TodoItem {
   dueDate: string;
   completed: boolean;
   createdAt: string;
+  subtasks?: TodoSubtask[];
 }
 
 interface TodoListProps {
@@ -50,6 +59,7 @@ export default function TodoList({ userEmail }: TodoListProps) {
   const [priority, setPriority] = useState<TodoPriority>('medium');
   const [dueDate, setDueDate] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [breakingDownId, setBreakingDownId] = useState<string | null>(null);
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -144,6 +154,57 @@ export default function TodoList({ userEmail }: TodoListProps) {
   const deleteTask = (id: string) => {
     setTasks(current => current.filter(task => task.id !== id));
     if (editingId === id) resetForm();
+  };
+
+  const handleMagicBreakdown = async (task: TodoItem) => {
+    if (breakingDownId) return;
+    setBreakingDownId(task.id);
+    try {
+      const prompt = `Break down the following task into 3 to 5 very short, actionable sub-tasks. Task: "${task.title}". Notes context: "${task.notes}". Output ONLY a valid JSON array of strings, e.g., ["subtask 1", "subtask 2"]. Do NOT output any markdown, conversational text, or backticks. Just the JSON array.`;
+      const responseText = await utilityService.generateJson(prompt);
+      
+      let parsed: string[] = [];
+      try {
+        parsed = JSON.parse(responseText);
+      } catch (e) {
+        toast.error("Failed to parse subtasks from AI.");
+        setBreakingDownId(null);
+        return;
+      }
+
+      if (!Array.isArray(parsed)) {
+        toast.error("Unexpected AI format.");
+        setBreakingDownId(null);
+        return;
+      }
+
+      const newSubtasks: TodoSubtask[] = parsed.map(title => ({
+        id: crypto.randomUUID(),
+        title,
+        completed: false
+      }));
+
+      setTasks(current => current.map(t => 
+        t.id === task.id ? { ...t, subtasks: [...(t.subtasks || []), ...newSubtasks] } : t
+      ));
+      toast.success("Magic breakdown complete!");
+    } catch (e) {
+      toast.error("Failed to generate breakdown.");
+    } finally {
+      setBreakingDownId(null);
+    }
+  };
+
+  const toggleSubtask = (taskId: string, subtaskId: string) => {
+    setTasks(current => current.map(t => {
+      if (t.id === taskId && t.subtasks) {
+        return {
+          ...t,
+          subtasks: t.subtasks.map(st => st.id === subtaskId ? { ...st, completed: !st.completed } : st)
+        };
+      }
+      return t;
+    }));
   };
 
   return (
@@ -372,9 +433,32 @@ export default function TodoList({ userEmail }: TodoListProps) {
                             {task.notes}
                           </p>
                         )}
+                        
+                        {task.subtasks && task.subtasks.length > 0 && (
+                          <div className="mt-4 space-y-2.5 pl-3 border-l-2 border-primary/20">
+                            {task.subtasks.map(st => (
+                              <div key={st.id} className="flex items-start gap-2.5 group/st cursor-pointer" onClick={() => toggleSubtask(task.id, st.id)}>
+                                <div className={cn("mt-0.5 size-4 rounded-full flex items-center justify-center border transition-all duration-300 shrink-0", st.completed ? "bg-primary border-primary text-primary-foreground shadow-[0_0_8px_rgba(var(--primary),0.4)]" : "border-muted-foreground/40 text-transparent group-hover/st:border-primary/50 group-hover/st:text-primary/30")}>
+                                  <Check size={10} strokeWidth={3} />
+                                </div>
+                                <span className={cn("text-[13px] font-medium transition-all duration-300 flex-1 select-none", st.completed ? "line-through text-muted-foreground/40" : "text-foreground/80 group-hover/st:text-foreground")}>{st.title}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0 bg-background/50 backdrop-blur-md rounded-2xl p-1.5 border border-border/50 shadow-sm shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleMagicBreakdown(task)}
+                          disabled={breakingDownId === task.id || task.completed}
+                          className="p-2 rounded-xl text-primary hover:bg-primary/20 transition-all duration-200 disabled:opacity-50"
+                          title="Magic Breakdown"
+                        >
+                          {breakingDownId === task.id ? <Loader2 size={16} className="animate-spin" strokeWidth={2.5} /> : <Wand2 size={16} strokeWidth={2.5} />}
+                        </button>
+                        <div className="w-px h-5 bg-border/60 mx-0.5" />
                         <button
                           type="button"
                           onClick={() => startEdit(task)}

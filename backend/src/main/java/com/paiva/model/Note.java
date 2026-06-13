@@ -7,6 +7,8 @@ import org.springframework.data.mongodb.core.index.TextIndexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.ArrayList;
 
 @Document(collection = "notes")
 public class Note {
@@ -21,6 +23,10 @@ public class Note {
     @TextIndexed
     private String content;
 
+    private boolean isPinned = false;
+    private List<String> tags = new ArrayList<>();
+    private String color = "default";
+
     @CreatedDate
     private Instant createdAt;
 
@@ -30,10 +36,13 @@ public class Note {
     public Note() {
     }
 
-    public Note(String userId, String title, String content) {
+    public Note(String userId, String title, String content, boolean isPinned, List<String> tags, String color) {
         this.userId = userId;
         this.title = title;
         this.content = content;
+        this.isPinned = isPinned;
+        this.tags = tags != null ? tags : new ArrayList<>();
+        this.color = color != null ? color : "default";
     }
 
     public String getId() {
@@ -62,6 +71,30 @@ public class Note {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public boolean getIsPinned() {
+        return isPinned;
+    }
+
+    public void setIsPinned(boolean isPinned) {
+        this.isPinned = isPinned;
+    }
+
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
     }
 
     public Instant getCreatedAt() {

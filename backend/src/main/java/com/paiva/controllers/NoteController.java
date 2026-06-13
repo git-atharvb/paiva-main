@@ -31,7 +31,7 @@ public class NoteController {
     @PostMapping
     public ResponseEntity<Note> createNote(@RequestBody Note noteRequest) {
         String userId = getCurrentUserId();
-        Note note = new Note(userId, noteRequest.getTitle(), noteRequest.getContent());
+        Note note = new Note(userId, noteRequest.getTitle(), noteRequest.getContent(), noteRequest.getIsPinned(), noteRequest.getTags(), noteRequest.getColor());
         return ResponseEntity.ok(noteRepository.save(note));
     }
 
@@ -47,6 +47,13 @@ public class NoteController {
             }
             note.setTitle(noteRequest.getTitle());
             note.setContent(noteRequest.getContent());
+            note.setIsPinned(noteRequest.getIsPinned());
+            if (noteRequest.getTags() != null) {
+                note.setTags(noteRequest.getTags());
+            }
+            if (noteRequest.getColor() != null) {
+                note.setColor(noteRequest.getColor());
+            }
             return ResponseEntity.ok(noteRepository.save(note));
         }
         return ResponseEntity.notFound().build();

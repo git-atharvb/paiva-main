@@ -60,6 +60,16 @@ export default function SettingsView() {
     onError: () => toast.error('Google login failed'),
   });
 
+  const disconnectCalendar = async () => {
+    try {
+      await userService.updateSettings({ ...settings, googleAccessToken: '', calendarConnected: false });
+      setSettings(s => ({ ...s, calendarConnected: false, googleAccessToken: '' }));
+      toast.success("Google Calendar disconnected.");
+    } catch {
+      toast.error("Failed to disconnect calendar.");
+    }
+  };
+
   useEffect(() => {
     if (!isLoaded) {
       userService.getSettings()
@@ -353,8 +363,17 @@ export default function SettingsView() {
                 </div>
               </div>
               {settings.calendarConnected ? (
-                <div className="flex items-center gap-2 text-sm font-bold text-green-500 bg-green-500/10 px-4 py-2 rounded-xl border border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.1)] shrink-0">
-                  <Check size={16} strokeWidth={3} /> Connected
+                <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-2 text-sm font-bold text-green-500 bg-green-500/10 px-4 py-2 rounded-xl border border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.1)]">
+                    <Check size={16} strokeWidth={3} /> Connected
+                  </div>
+                  <button
+                    type="button"
+                    onClick={disconnectCalendar}
+                    className="px-4 py-2 bg-destructive/10 text-destructive text-[13px] font-bold rounded-xl hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 active:scale-95 border border-destructive/20"
+                  >
+                    Disconnect
+                  </button>
                 </div>
               ) : (
                 <button

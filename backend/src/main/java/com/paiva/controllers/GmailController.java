@@ -47,6 +47,13 @@ public class GmailController {
             List<Map<String, Object>> emails = gmailService.getRecentEmails(accessToken, limit);
             return ResponseEntity.ok(emails);
         } catch (Exception e) {
+            if (e.getMessage() != null && e.getMessage().contains("401 Unauthorized")) {
+                User user = userOpt.get();
+                user.setGoogleAccessToken(null);
+                user.setGoogleRefreshToken(null);
+                userRepository.save(user);
+                return ResponseEntity.status(401).body(Map.of("error", "Google Token Expired. Please reconnect in Settings."));
+            }
             return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
     }
@@ -77,6 +84,13 @@ public class GmailController {
             Map<String, Object> draft = gmailService.createDraft(accessToken, to, subject, body);
             return ResponseEntity.ok(draft);
         } catch (Exception e) {
+            if (e.getMessage() != null && e.getMessage().contains("401 Unauthorized")) {
+                User user = userOpt.get();
+                user.setGoogleAccessToken(null);
+                user.setGoogleRefreshToken(null);
+                userRepository.save(user);
+                return ResponseEntity.status(401).body(Map.of("error", "Google Token Expired. Please reconnect in Settings."));
+            }
             return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
     }
@@ -131,6 +145,13 @@ public class GmailController {
 
             return ResponseEntity.ok(Map.of("replyText", draftText));
         } catch (Exception e) {
+            if (e.getMessage() != null && e.getMessage().contains("401 Unauthorized")) {
+                User user = userOpt.get();
+                user.setGoogleAccessToken(null);
+                user.setGoogleRefreshToken(null);
+                userRepository.save(user);
+                return ResponseEntity.status(401).body(Map.of("error", "Google Token Expired. Please reconnect in Settings."));
+            }
             return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
     }

@@ -5,6 +5,9 @@ export interface Note {
   userId: string;
   title: string;
   content: string;
+  isPinned: boolean;
+  tags: string[];
+  color: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -17,21 +20,21 @@ export const getNotes = async (): Promise<Note[]> => {
   return response.json();
 };
 
-export const createNote = async (title: string, content: string): Promise<Note> => {
+export const createNote = async (title: string, content: string, isPinned: boolean = false, tags: string[] = [], color: string = 'default'): Promise<Note> => {
   const response = await fetchWithAuth('/api/notes', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, content })
+    body: JSON.stringify({ title, content, isPinned, tags, color })
   });
   if (!response.ok) throw new Error('Failed to create note');
   return response.json();
 };
 
-export const updateNote = async (id: string, title: string, content: string): Promise<Note> => {
+export const updateNote = async (id: string, title: string, content: string, isPinned: boolean = false, tags: string[] = [], color: string = 'default'): Promise<Note> => {
   const response = await fetchWithAuth(`/api/notes/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, content })
+    body: JSON.stringify({ title, content, isPinned, tags, color })
   });
   if (!response.ok) throw new Error('Failed to update note');
   return response.json();

@@ -13,9 +13,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class ActionHubService {
+
+    private static class CacheEntry {
+        List<Map<String, String>> suggestions;
+        long timestamp;
+        CacheEntry(List<Map<String, String>> suggestions, long timestamp) {
+            this.suggestions = suggestions;
+            this.timestamp = timestamp;
+        }
+    }
+    
+    private final Map<String, CacheEntry> suggestionCache = new ConcurrentHashMap<>();
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final MessageRepository messageRepository;
@@ -37,6 +49,11 @@ public class ActionHubService {
 
     @SuppressWarnings("UseSpecificCatch")
     public List<Map<String, String>> generateSuggestions(String userId, String googleAccessToken) {
+        CacheEntry entry = suggestionCache.get(userId);
+        if (entry != null && System.currentTimeMillis() - entry.timestamp < 300000) { // 5 minutes
+            return entry.suggestions;
+        }
+
         StringBuilder contextBuilder = new StringBuilder();
         
         // 1. Fetch recent chat messages from all user's conversations
@@ -116,6 +133,11 @@ public class ActionHubService {
                     suggestions.add(suggestion);
                 }
             }
+            
+            if (!suggestions.isEmpty()) {
+                suggestionCache.put(userId, new CacheEntry(suggestions, System.currentTimeMillis()));
+            }
+            
             return suggestions;
 
         } catch (Exception e) {
