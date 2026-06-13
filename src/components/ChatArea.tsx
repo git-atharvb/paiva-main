@@ -835,10 +835,10 @@ export default function ChatArea({ isSecondary = false }: { isSecondary?: boolea
                         const cleanText = content.replace(imageRegex, '').trim();
                         return (
                           <div className="flex flex-col xl:flex-row gap-6 w-full items-start relative">
-                            <div className={cn("w-full xl:w-1/2 shrink-0 flex flex-col gap-4 sticky top-4", isImageOnRight ? "xl:order-2" : "xl:order-1")}>
-                              <WikipediaImage matches={matches.map(m => ({ alt: m[1], term: m[2] }))} className="w-full max-w-full my-0 h-[350px] xl:h-[450px]" />
+                            <div className={cn("w-full xl:w-1/2 shrink-0 flex flex-col gap-4 relative xl:sticky xl:top-4", isImageOnRight ? "xl:order-2" : "xl:order-1")}>
+                              <WikipediaImage matches={matches.map(m => ({ alt: m[1], term: m[2] }))} className="w-full max-w-full my-0 h-[300px] sm:h-[350px] xl:h-[450px]" />
                             </div>
-                            <div className={cn("w-full xl:w-1/2 min-w-0 prose prose-sm dark:prose-invert max-w-none", isImageOnRight ? "xl:order-1" : "xl:order-2")}>
+                            <div className={cn("w-full xl:w-1/2 min-w-0 prose prose-sm dark:prose-invert max-w-none relative z-10", isImageOnRight ? "xl:order-1" : "xl:order-2")}>
                               {renderMarkdown(cleanText)}
                             </div>
                           </div>

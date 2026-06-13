@@ -11,6 +11,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import type { CredentialResponse } from '@react-oauth/google';
 import { useTheme } from '../../context/ThemeContext';
 import { ArrowRight } from 'lucide-react';
+import paivaLogo from '../../assets/paiva_logo.png';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address.'),
@@ -83,7 +84,7 @@ export default function LoginForm({ onToggleMode }: LoginFormProps) {
       <div className="flex flex-col items-center justify-center py-8 animate-in fade-in zoom-in duration-500">
         <div className="relative w-20 h-20 mb-6">
           <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full animate-pulse" />
-          <img src="/src/assets/paiva_logo.png" alt="PAIVA Logo" className="w-full h-full object-contain relative z-10 animate-bounce" style={{ animationDuration: '2s' }} />
+          <img src={paivaLogo} alt="PAIVA Logo" className="w-full h-full object-contain relative z-10 animate-bounce" style={{ animationDuration: '2s' }} />
         </div>
         <h3 className="text-lg font-bold text-foreground mb-2 tracking-tight">Authenticating...</h3>
         <p className="text-sm text-muted-foreground mb-6 text-center">Securing your connection to PAIVA</p>
