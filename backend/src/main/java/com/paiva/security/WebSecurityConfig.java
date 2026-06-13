@@ -4,6 +4,7 @@ import com.paiva.security.jwt.AuthEntryPointJwt;
 import com.paiva.security.jwt.AuthTokenFilter;
 import com.paiva.security.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -76,10 +77,13 @@ public class WebSecurityConfig {
         return http.build();
     }
 
+    @Value("${paiva.app.frontendUrls:http://localhost:5173,http://127.0.0.1:5173}")
+    private String[] frontendUrls;
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:5173")); // Allow requests from React frontend
+        configuration.setAllowedOrigins(Arrays.asList(frontendUrls));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
