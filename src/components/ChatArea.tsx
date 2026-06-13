@@ -935,7 +935,7 @@ export default function ChatArea({ isSecondary = false }: { isSecondary?: boolea
             className="flex flex-col sm:flex-row gap-3 shrink-0 mx-auto max-w-5xl w-full min-w-0"
             onSubmit={handleSend}
           >
-            <div className="relative flex-1 group/composer min-w-0">
+            <div className="relative flex-1 group/composer min-w-0 flex flex-col md:block">
               {/* Glowing aura under composer */}
               <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-indigo-500/20 to-primary/20 rounded-[2rem] blur-xl opacity-0 group-focus-within/composer:opacity-100 transition-opacity duration-700 pointer-events-none" />
               
@@ -1018,7 +1018,7 @@ export default function ChatArea({ isSecondary = false }: { isSecondary?: boolea
             placeholder="Message PAIVA…"
             disabled={isTyping}
             className={cn(
-              'w-full pl-6 pr-40 py-4.5 rounded-[2rem]',
+              'w-full pl-6 py-4.5 rounded-[2rem] pr-4 md:pr-[310px]',
               'glass-surface-subtle',
               'border border-border/50',
               'text-foreground text-[15px] font-semibold tracking-wide',
@@ -1030,7 +1030,7 @@ export default function ChatArea({ isSecondary = false }: { isSecondary?: boolea
               'disabled:opacity-45 disabled:cursor-not-allowed'
             )}
           />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5 justify-end mt-2 md:mt-0 md:absolute md:right-3 md:top-1/2 md:-translate-y-1/2">
             <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv" onChange={handleFileUpload} />
             <input type="file" ref={imageInputRef} className="hidden" accept="image/*,.svg,.cdr,.cdt" onChange={handleFileUpload} />
             
@@ -1122,6 +1122,7 @@ export default function ChatArea({ isSecondary = false }: { isSecondary?: boolea
             </label>
           </div>
         </div>
+        <div className="flex justify-end mt-2 sm:mt-0">
         {isTyping ? (
           <Button
             type="button"
@@ -1155,6 +1156,7 @@ export default function ChatArea({ isSecondary = false }: { isSecondary?: boolea
             <Send size={20} strokeWidth={2.5} className="ml-1" />
           </Button>
         )}
+        </div>
           </form>
         </div>
       </div>

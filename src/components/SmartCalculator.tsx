@@ -18,6 +18,7 @@ export default function SmartCalculator() {
   const [isScientific, setIsScientific] = useState(false);
   const [results, setResults] = useState<string[]>([]);
   const [aiSolution, setAiSolution] = useState<string | null>(null);
+  const [showKeypad, setShowKeypad] = useState(() => window.innerWidth > 1024);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-save text to local storage
@@ -160,7 +161,14 @@ export default function SmartCalculator() {
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap justify-end">
+          <button
+            onClick={() => setShowKeypad(!showKeypad)}
+            className={`px-4 py-2 rounded-xl border transition-colors flex items-center gap-2 font-semibold ${showKeypad ? 'bg-primary/20 text-primary border-primary/30' : 'bg-card text-muted-foreground border-border/50 hover:bg-secondary'}`}
+          >
+            <Calculator size={18} strokeWidth={2.5} />
+            <span className="hidden sm:inline">Keypad</span>
+          </button>
           <button
             onClick={handleExportPDF}
             disabled={isExporting}
@@ -189,7 +197,7 @@ export default function SmartCalculator() {
 
       <div id="calc-scroll-container" className="flex-1 overflow-y-auto magical-scrollbar rounded-3xl pb-10">
         {/* Top Area: Math Notebook and Keypad */}
-        <div className="flex flex-col lg:flex-row gap-6 h-[500px] shrink-0">
+        <div className="flex flex-col lg:flex-row gap-6 h-auto lg:h-[500px] shrink-0">
           {/* Left: Math Notebook Canvas */}
           <div className="flex-1 min-h-[300px] h-full bg-background/50 backdrop-blur-md border border-border/50 rounded-3xl overflow-hidden shadow-sm flex relative">
             <textarea
@@ -217,8 +225,9 @@ export default function SmartCalculator() {
           </div>
 
           {/* Right: Visual Keypad */}
-          <div className="w-full lg:w-[320px] shrink-0 bg-background/40 backdrop-blur-md border border-border/40 rounded-3xl p-5 shadow-sm flex flex-col h-full">
-            <div className="flex justify-between items-center mb-3">
+          {showKeypad && (
+            <div className="w-full lg:w-[320px] shrink-0 bg-background/40 backdrop-blur-md border border-border/40 rounded-3xl p-5 shadow-sm flex flex-col h-[400px] lg:h-full">
+              <div className="flex justify-between items-center mb-3">
               <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Keypad</span>
               <button 
                 onClick={() => setIsScientific(!isScientific)}
@@ -280,6 +289,7 @@ export default function SmartCalculator() {
               </button>
             </div>
           </div>
+          )}
         </div>
 
         {/* Bottom Area: AI Solution Card */}
